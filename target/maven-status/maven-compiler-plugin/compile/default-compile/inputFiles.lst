@@ -1,0 +1,11 @@
+/Users/alexbolshakov/Desktop/grc-csi/Sdev334/week-3/centroid-finder/src/main/java/io/github/jacobwoodbury/centroid-finder/BinarizingImageGroupFinder.java
+/Users/alexbolshakov/Desktop/grc-csi/Sdev334/week-3/centroid-finder/src/main/java/io/github/jacobwoodbury/centroid-finder/BinaryGroupFinder.java
+/Users/alexbolshakov/Desktop/grc-csi/Sdev334/week-3/centroid-finder/src/main/java/io/github/jacobwoodbury/centroid-finder/ColorDistanceFinder.java
+/Users/alexbolshakov/Desktop/grc-csi/Sdev334/week-3/centroid-finder/src/main/java/io/github/jacobwoodbury/centroid-finder/Coordinate.java
+/Users/alexbolshakov/Desktop/grc-csi/Sdev334/week-3/centroid-finder/src/main/java/io/github/jacobwoodbury/centroid-finder/DfsBinaryGroupFinder.java
+/Users/alexbolshakov/Desktop/grc-csi/Sdev334/week-3/centroid-finder/src/main/java/io/github/jacobwoodbury/centroid-finder/DistanceImageBinarizer.java
+/Users/alexbolshakov/Desktop/grc-csi/Sdev334/week-3/centroid-finder/src/main/java/io/github/jacobwoodbury/centroid-finder/EuclideanColorDistance.java
+/Users/alexbolshakov/Desktop/grc-csi/Sdev334/week-3/centroid-finder/src/main/java/io/github/jacobwoodbury/centroid-finder/Group.java
+/Users/alexbolshakov/Desktop/grc-csi/Sdev334/week-3/centroid-finder/src/main/java/io/github/jacobwoodbury/centroid-finder/ImageBinarizer.java
+/Users/alexbolshakov/Desktop/grc-csi/Sdev334/week-3/centroid-finder/src/main/java/io/github/jacobwoodbury/centroid-finder/ImageGroupFinder.java
+/Users/alexbolshakov/Desktop/grc-csi/Sdev334/week-3/centroid-finder/src/main/java/io/github/jacobwoodbury/centroid-finder/ImageSummaryApp.java
