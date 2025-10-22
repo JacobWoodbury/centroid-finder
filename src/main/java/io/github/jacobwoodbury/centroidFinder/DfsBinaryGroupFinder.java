@@ -1,3 +1,5 @@
+package io.github.jacobwoodbury.centroidFinder;
+
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collection;
@@ -7,7 +9,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.Stack;
 
-import org.junit.platform.reporting.shadow.org.opentest4j.reporting.events.core.CoreFactory;
+
 
 public class DfsBinaryGroupFinder implements BinaryGroupFinder {
    /**

@@ -1,3 +1,5 @@
+package io.github.jacobwoodbury.centroidFinder;
+
 /**
  * Represents a location in an image or array
  * 

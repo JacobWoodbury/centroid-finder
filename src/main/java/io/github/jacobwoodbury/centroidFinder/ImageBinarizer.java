@@ -1,3 +1,5 @@
+package io.github.jacobwoodbury.centroidFinder;
+
 import java.awt.image.BufferedImage;
 
 /**
