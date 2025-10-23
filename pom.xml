@@ -27,6 +27,7 @@
             <version>${junit.version}</version>
             <scope>test</scope>
         </dependency>
+
         <dependency>
             <groupId>org.junit.jupiter</groupId>
             <artifactId>junit-jupiter-engine</artifactId>
@@ -40,19 +41,39 @@
             <version>5.10.0</version>
             <scope>test</scope>
         </dependency>
+
         <dependency>
             <groupId>org.junit.jupiter</groupId>
             <artifactId>junit-jupiter-engine</artifactId>
             <version>5.10.0</version>
             <scope>test</scope>
         </dependency>
+                
+        <!-- JavaCV API -->
+        <dependency>
+            <groupId>org.bytedeco</groupId>
+            <artifactId>javacv</artifactId>
+            <version>1.5.10</version>
+        </dependency>
 
+        <!-- FFmpeg (video/audio processing) -->
+        <dependency>
+            <groupId>org.bytedeco</groupId>
+            <artifactId>ffmpeg-platform</artifactId>
+            <version>6.1.1-1.5.10</version>
+        </dependency>
+
+        <!-- OpenCV (optional, for computer vision/image processing) -->
+        <dependency>
+            <groupId>org.bytedeco</groupId>
+            <artifactId>opencv-platform</artifactId>
+            <version>4.9.0-1.5.10</version>
+        </dependency>
 
     </dependencies>
 
     <build>
         <plugins>
-
             <!-- Compiler plugin -->
             <plugin>
                 <groupId>org.apache.maven.plugins</groupId>
@@ -62,21 +83,19 @@
                     <release>${maven.compiler.release}</release>
                 </configuration>
             </plugin>
-
             <!-- Surefire plugin for tests -->
             <plugin>
                 <groupId>org.apache.maven.plugins</groupId>
                 <artifactId>maven-surefire-plugin</artifactId>
                 <version>3.2.5</version>
             </plugin>
-
             <!-- Exec plugin for running main class -->
             <plugin>
                 <groupId>org.codehaus.mojo</groupId>
                 <artifactId>exec-maven-plugin</artifactId>
                 <version>3.6.2</version>
                 <configuration>
-                    <mainClass>io.github.jacobwoodbury.centroidFinder.ImageSummaryApp</mainClass>
+                    <mainClass>io.github.jacobwoodbury.centroidFinder.videoTest</mainClass>
                 </configuration>
             </plugin>
 
@@ -86,8 +105,6 @@
                 <version>3.2.5</version>
             </plugin>
 
-
         </plugins>
     </build>
-
 </project>
