@@ -71,11 +71,16 @@ if (args.length < 4) {
                 List<Group> groups = groupFinder.findConnectedGroups(inputImage);
 
                 //grab the first (largest)
-
-                //pring to our csv in (timestamp, x, y) as a row
-
+                Group largest = groups.get(0);
+                //print to our csv in (timestamp, x, y) as a row
+                if(largest.centroid() == null){
+                    writer.println(timeStamp + "(-1,-1)");
+                }else{
+                    writer.println(timeStamp + ", "+ "("+ largest.centroid().x() + "," + largest.centroid().y() + ")");
+                }
+                
                 //grab the next frame
-
+                grabber.grabImage();
 
             }
             
