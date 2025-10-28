@@ -95,7 +95,7 @@
                 <artifactId>exec-maven-plugin</artifactId>
                 <version>3.6.2</version>
                 <configuration>
-                    <mainClass>io.github.jacobwoodbury.centroidFinder.videoTest</mainClass>
+                    <mainClass>io.github.jacobwoodbury.centroidFinder.VideoSummaryApp</mainClass>
                 </configuration>
             </plugin>
 

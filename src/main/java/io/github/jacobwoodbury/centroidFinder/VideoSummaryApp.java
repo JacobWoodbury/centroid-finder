@@ -12,7 +12,7 @@ import org.bytedeco.javacv.*;
 public class VideoSummaryApp {
     public static void main(String args[]){
 
-if (args.length < 4) {
+        if (args.length < 4) {
             System.out.println("Usage: java VideoSummaryApp <input_path> <outputCsv> <hex_target_color> <threshold>");
             return;
         }
@@ -25,15 +25,6 @@ if (args.length < 4) {
             threshold = Integer.parseInt(args[3]);
         } catch (NumberFormatException e) {
             System.err.println("Threshold must be an integer.");
-            return;
-        }
-
-        BufferedImage inputImage = null;
-        try {
-            inputImage = ImageIO.read(new File(inputPath));
-        } catch (Exception e) {
-            System.err.println("Error loading image: " + inputPath);
-            e.printStackTrace();
             return;
         }
 
@@ -60,15 +51,15 @@ if (args.length < 4) {
                 BufferedImage image = toBufferedImage.convert(frame);
                 //Create the DistanceImageBinarizer with a EuclideanColorDistance instance.
                 ColorDistanceFinder distanceFinder = new EuclideanColorDistance();
-            ImageBinarizer binarizer = new DistanceImageBinarizer(distanceFinder, targetColor, threshold);
+                ImageBinarizer binarizer = new DistanceImageBinarizer(distanceFinder, targetColor, threshold);
                 //binarize image
                 int[][] binaryArray = binarizer.toBinaryArray(image);
+                BufferedImage binaryImage = binarizer.toBufferedImage(binaryArray);
 
                 //create groupFinder
                 ImageGroupFinder groupFinder = new BinarizingImageGroupFinder(binarizer, new DfsBinaryGroupFinder());
-
                 //get groups
-                List<Group> groups = groupFinder.findConnectedGroups(inputImage);
+                List<Group> groups = groupFinder.findConnectedGroups(binaryImage);
 
                 //grab the first (largest)
                 Group largest = groups.get(0);
@@ -81,7 +72,6 @@ if (args.length < 4) {
                 
                 //grab the next frame
                 grabber.grabImage();
-
             }
             
         } catch (Exception e) {

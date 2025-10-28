@@ -1,12 +1,13 @@
 io/github/jacobwoodbury/centroidFinder/ImageSummaryApp.class
 io/github/jacobwoodbury/centroidFinder/videoTest.class
-io/github/jacobwoodbury/centroidFinder/ColorDistanceFinder.class
 io/github/jacobwoodbury/centroidFinder/Coordinate.class
 io/github/jacobwoodbury/centroidFinder/BinaryGroupFinder.class
+io/github/jacobwoodbury/centroidFinder/ImageGroupFinder.class
+io/github/jacobwoodbury/centroidFinder/Group.class
+io/github/jacobwoodbury/centroidFinder/ColorDistanceFinder.class
 io/github/jacobwoodbury/centroidFinder/BinarizingImageGroupFinder.class
 io/github/jacobwoodbury/centroidFinder/DfsBinaryGroupFinder.class
-io/github/jacobwoodbury/centroidFinder/ImageGroupFinder.class
 io/github/jacobwoodbury/centroidFinder/ImageBinarizer.class
-io/github/jacobwoodbury/centroidFinder/Group.class
 io/github/jacobwoodbury/centroidFinder/EuclideanColorDistance.class
 io/github/jacobwoodbury/centroidFinder/DistanceImageBinarizer.class
+io/github/jacobwoodbury/centroidFinder/VideoSummaryApp.class
