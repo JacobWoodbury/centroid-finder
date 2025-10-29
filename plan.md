@@ -15,3 +15,9 @@
 - grab the biggest group (sorted should be at the top)
 - using timestamp, group x, and group y Print to the outpust csv row (adding to file not creating a new one)
 - grab next frame
+
+
+Tracking live salamander validation:
+  We went through the video and used a colorpicker to check the color of the salamander.
+  Next we found points in the video where the salamander was at a unique position, and compared x and y in the csv at that second.
+  to pick a threshold, we can use a colorpicker on the closest color that is not a salamander, and compare the distance. 
