@@ -39,7 +39,6 @@ public class VideoSummaryApp {
         try (FFmpegFrameGrabber grabber = new FFmpegFrameGrabber(inputPath); Java2DFrameConverter toBufferedImage = new Java2DFrameConverter(); PrintWriter writer = new PrintWriter(outputCsv);){
             grabber.start();
             Frame frame = grabber.grabImage();
-            int timeStamp;
            
                
             while(frame != null){

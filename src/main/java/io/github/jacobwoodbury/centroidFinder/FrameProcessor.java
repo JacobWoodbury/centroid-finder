@@ -25,7 +25,6 @@ public class FrameProcessor {
             List<Group> groups = groupFinder.findConnectedGroups(image);
 
             //grab the first (largest)
-            System.out.println(groups.get(0).toCsvRow()+ "  largest group");
             Group largest = groups.get(0);
             //print to our csv in (timestamp, x, y) as a row
             if(largest.centroid() == null){
