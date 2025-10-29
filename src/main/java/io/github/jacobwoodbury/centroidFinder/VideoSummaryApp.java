@@ -1,10 +1,8 @@
 package io.github.jacobwoodbury.centroidFinder;
 
 import java.awt.image.BufferedImage;
-import java.io.File;
 import java.io.PrintWriter;
 import java.util.List;
-import javax.imageio.ImageIO;
 import org.bytedeco.javacv.*;
 
 
@@ -46,31 +44,24 @@ public class VideoSummaryApp {
                
             while(frame != null){
                 //grab timestamp
-                timeStamp = (int) (frame.timestamp/100000);
+                timeStamp = (int) (frame.timestamp/1000000);
                 //Buffered image conversion
                 BufferedImage image = toBufferedImage.convert(frame);
-    //Buffered image colored
+                //Buffered image colored
                 //Create the DistanceImageBinarizer with a EuclideanColorDistance instance.
                 ColorDistanceFinder distanceFinder = new EuclideanColorDistance();
                 ImageBinarizer binarizer = new DistanceImageBinarizer(distanceFinder, targetColor, threshold);
-                //binarize image
-    //BufferedImage => int[][]
-                int[][] binaryArray = binarizer.toBinaryArray(image);
-
-    //int[][] => BuffImg 
-    //BuffImg black and white
-                BufferedImage binaryImage = binarizer.toBufferedImage(binaryArray);
-
-//maybe we need to write the B&W image here?            
+                
+                //maybe we need to write the B&W image here?            
 
                 //create groupFinder
                 ImageGroupFinder groupFinder = new BinarizingImageGroupFinder(binarizer, new DfsBinaryGroupFinder());
                 //get groups
-    //B&W BuffImg => groups
-                List<Group> groups = groupFinder.findConnectedGroups(binaryImage);
+                //B&W BuffImg => groups
+                List<Group> groups = groupFinder.findConnectedGroups(image);
 
                 //grab the first (largest)
-    System.out.println(groups.get(0).toCsvRow()+ "  largest group");
+                System.out.println(groups.get(0).toCsvRow()+ "  largest group");
                 Group largest = groups.get(0);
                 //print to our csv in (timestamp, x, y) as a row
                 if(largest.centroid() == null){
@@ -80,11 +71,11 @@ public class VideoSummaryApp {
                 }
                 
                 //grab the next frame
-                grabber.grabImage();
+                frame = grabber.grabImage();
             }
             
-        } catch (Exception e) {
-            // TODO: handle exception
+        }catch(Exception e){
+            System.err.println("Unexpected error: " + e.getMessage());
         }
 
     }
