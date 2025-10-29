@@ -11,7 +11,7 @@ import org.bytedeco.javacv.*;
 
 public class VideoSummaryApp {
     public static void main(String args[]){
-
+//handle Args
         if (args.length < 4) {
             System.out.println("Usage: java VideoSummaryApp <input_path> <outputCsv> <hex_target_color> <threshold>");
             return;
@@ -49,19 +49,28 @@ public class VideoSummaryApp {
                 timeStamp = (int) (frame.timestamp/100000);
                 //Buffered image conversion
                 BufferedImage image = toBufferedImage.convert(frame);
+    //Buffered image colored
                 //Create the DistanceImageBinarizer with a EuclideanColorDistance instance.
                 ColorDistanceFinder distanceFinder = new EuclideanColorDistance();
                 ImageBinarizer binarizer = new DistanceImageBinarizer(distanceFinder, targetColor, threshold);
                 //binarize image
+    //BufferedImage => int[][]
                 int[][] binaryArray = binarizer.toBinaryArray(image);
+
+    //int[][] => BuffImg 
+    //BuffImg black and white
                 BufferedImage binaryImage = binarizer.toBufferedImage(binaryArray);
+
+//maybe we need to write the B&W image here?            
 
                 //create groupFinder
                 ImageGroupFinder groupFinder = new BinarizingImageGroupFinder(binarizer, new DfsBinaryGroupFinder());
                 //get groups
+    //B&W BuffImg => groups
                 List<Group> groups = groupFinder.findConnectedGroups(binaryImage);
 
                 //grab the first (largest)
+    System.out.println(groups.get(0).toCsvRow()+ "  largest group");
                 Group largest = groups.get(0);
                 //print to our csv in (timestamp, x, y) as a row
                 if(largest.centroid() == null){

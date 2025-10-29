@@ -36,11 +36,12 @@ import javax.imageio.ImageIO;
  */
 public class ImageSummaryApp {
     public static void main(String[] args) {
+//handle Args
+
         if (args.length < 3) {
             System.out.println("Usage: java ImageSummaryApp <input_image> <hex_target_color> <threshold>");
             return;
         }
-        
         String inputImagePath = args[0];
         String hexTargetColor = args[1];
         int threshold = 0;
@@ -50,17 +51,7 @@ public class ImageSummaryApp {
             System.err.println("Threshold must be an integer.");
             return;
         }
-        
-        BufferedImage inputImage = null;
-        try {
-            inputImage = ImageIO.read(new File(inputImagePath));
-        } catch (Exception e) {
-            System.err.println("Error loading image: " + inputImagePath);
-            e.printStackTrace();
-            return;
-        }
-        
-        // Parse the target color from a hex string (format RRGGBB) into a 24-bit integer (0xRRGGBB)
+         // Parse the target color from a hex string (format RRGGBB) into a 24-bit integer (0xRRGGBB)
         int targetColor = 0;
         try {
             targetColor = Integer.parseInt(hexTargetColor, 16);
@@ -68,13 +59,32 @@ public class ImageSummaryApp {
             System.err.println("Invalid hex target color. Please provide a color in RRGGBB format.");
             return;
         }
+
+
+        BufferedImage inputImage = null;
+        try {
+//reads the image into inputImage
+
+            inputImage = ImageIO.read(new File(inputImagePath));
+        } catch (Exception e) {
+            System.err.println("Error loading image: " + inputImagePath);
+            e.printStackTrace();
+            return;
+        }
         
+       
+    //Uses eucDist(compares to colors) to create a DisstanceImageBinarizer(BufferedImage => int[][] or int[][] => BuffImg )
+
         // Create the DistanceImageBinarizer with a EuclideanColorDistance instance.
         ColorDistanceFinder distanceFinder = new EuclideanColorDistance();
         ImageBinarizer binarizer = new DistanceImageBinarizer(distanceFinder, targetColor, threshold);
         
         // Binarize the input image.
+
+    //BufferedImage => int[][]
         int[][] binaryArray = binarizer.toBinaryArray(inputImage);
+
+    //int[][] => BuffImg
         BufferedImage binaryImage = binarizer.toBufferedImage(binaryArray);
         
         // Write the binarized image to disk as "binarized.png".
@@ -86,6 +96,7 @@ public class ImageSummaryApp {
             e.printStackTrace();
         }
         
+    //BufferedImage => GroupList
         // Create an ImageGroupFinder using a BinarizingImageGroupFinder with a DFS-based BinaryGroupFinder.
         ImageGroupFinder groupFinder = new BinarizingImageGroupFinder(binarizer, new DfsBinaryGroupFinder());
         
