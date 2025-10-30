@@ -28,3 +28,6 @@ replay_pid*
 test_vid.mp4
 Ball.mp4
 ensantina.mp4
+
+node_modules
+.env
