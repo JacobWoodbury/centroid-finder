@@ -1,6 +1,6 @@
-import Jobs from "./JobsSchema";
-import Videos from "./VideosSchema";
-import sequelize from "../../db/connection";
+import Jobs from "./JobsSchema.js";
+import Videos from "./VideosSchema.js";
+import sequelize from "../../db/connection.js";
 
 Videos.hasMany(Jobs, {
   foreignKey: "input_video_id",
