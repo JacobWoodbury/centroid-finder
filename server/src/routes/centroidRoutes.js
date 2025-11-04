@@ -1,5 +1,5 @@
 import { Router } from "express";
-import {getVideos} from "./controllers/centroidController.js"
+import { getVideos } from "./controllers/centroidController.js";
 
 const centroidRouter = Router();
 
@@ -11,13 +11,12 @@ const centroidRouter = Router();
 
 //GET /process/{jobId}/status
 
-centroidRouter.get('/thumbnail/:filename', getThumbnail)
+centroidRouter.get("/thumbnail/:filename", getThumbnail);
 
-centroidRouter.get('/api/videos', getVideos)
+centroidRouter.get("/api/videos", getVideos);
 
-centroidRouter.post('/process/:filename', startVideoProcess)
+centroidRouter.post("/process/:filename", startVideoProcess);
 
-centroidRouter.get('/process/:jobId/status', getVideos)
+centroidRouter.get("/process/:id/status", getVideos);
 
-
-export default centroidRouter
+export default centroidRouter;
