@@ -1,4 +1,4 @@
-package processor.src.main.java.io.github.jacobwoodbury.centroidFinder;
+package io.github.jacobwoodbury.centroidFinder;
 
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;

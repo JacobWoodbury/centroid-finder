@@ -1,4 +1,4 @@
-package processor.src.main.java.io.github.jacobwoodbury.centroidFinder;
+package io.github.jacobwoodbury.centroidFinder;
 
 /**
  * Represents a group of contiguous pixels in an image.

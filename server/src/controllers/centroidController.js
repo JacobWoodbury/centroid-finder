@@ -1,6 +1,10 @@
-import fs from "fs";
-import path from "path";
 import { spawn } from "child_process";
+import path from "path";
+import fs from "fs";
+import { fileURLToPath } from "url";
+
+const __filename = fileURLToPath(import.meta.url);
+const __dirname = path.dirname(__filename);
 
 export const getVideos = (req, res) => {
   try {
@@ -32,36 +36,34 @@ export const startVideoProcess = (req, res) => {
     const { threshold, output, hexColor } = req.body;
     const { fileName } = req.params;
 
-    // Validate inputs
     if (!fileName || !output || !hexColor || !threshold) {
       return res.status(400).json({ message: "Missing required parameters" });
     }
 
-    // Build absolute JAR path
     const jarPath = path.resolve(
-      "../target/CentroidFinder-jar-with-dependencies.jar"
+      __dirname,
+      "../../../processor/target/CentroidFinder-jar-with-dependencies.jar"
     );
+    const inputPath = path.resolve(__dirname, "../../public/videos", fileName);
+    const outputPath = path.resolve(__dirname, "../../public/output", output);
 
-    // Build argument list
-    const jarArgs = [fileName, output, hexColor, threshold];
+    const jarArgs = [inputPath, outputPath, hexColor, threshold];
 
-    // Spawn detached Java process
+    console.log("Executing:", ["java", "-jar", jarPath, ...jarArgs]);
+
     const child = spawn("java", ["-jar", jarPath, ...jarArgs], {
       detached: true,
-      stdio: "ignore", // don't tie to Express process
+      stdio: "ignore",
     });
 
-    // Handle process errors
     child.on("error", (err) => {
       console.error("Failed to start background job:", err);
     });
 
-    // Detach process from parent so Express can respond immediately
     child.unref();
 
-    // Respond to client immediately (202 = Accepted, job running)
     res.status(202).json({
-      message: "Job accepted and is running in the background.",
+      message: "Job accepted and running in background.",
       pid: child.pid,
     });
 

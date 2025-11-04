@@ -1,4 +1,4 @@
-package processor.src.main.java.io.github.jacobwoodbury.centroidFinder;
+package io.github.jacobwoodbury.centroidFinder;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import org.junit.jupiter.api.BeforeEach;

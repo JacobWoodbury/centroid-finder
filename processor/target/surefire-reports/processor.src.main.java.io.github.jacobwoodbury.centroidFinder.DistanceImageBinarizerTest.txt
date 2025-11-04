@@ -1,4 +1,0 @@
--------------------------------------------------------------------------------
-Test set: processor.src.main.java.io.github.jacobwoodbury.centroidFinder.DistanceImageBinarizerTest
--------------------------------------------------------------------------------
-Tests run: 9, Failures: 0, Errors: 0, Skipped: 0, Time elapsed: 0.013 s -- in processor.src.main.java.io.github.jacobwoodbury.centroidFinder.DistanceImageBinarizerTest

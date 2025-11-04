@@ -1,4 +1,5 @@
-package processor.src.main.java.io.github.jacobwoodbury.centroidFinder;
+package io.github.jacobwoodbury.centroidFinder;
+
 
 import java.awt.image.BufferedImage;
 import java.io.PrintWriter;
