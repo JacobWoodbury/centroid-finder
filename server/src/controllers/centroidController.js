@@ -1,5 +1,6 @@
 import fs from "fs";
 import path from "path";
+import { spawn } from "child_process";
 
 export const getVideos = (req, res) => {
   try {
@@ -27,26 +28,48 @@ export const getThumbnail = (req, res) => {
 };
 
 export const startVideoProcess = (req, res) => {
-  const { threshold, output, hexColor } = req.body;
-  const { fileName } = req.params;
-    const jarArgs = [fileName, output, hexColor, threshold]
-  const jarPath = "target/CentroidFinder-jar-with-dependencies.jar";
-  const child = spawn("java", ["-jar", jarPath, ...jarArgs], {
-    detached: true,
-    stdio: "ignore",
-  });
-  child.on("error", (err) => {
-    // Note: We can't send a response here if one was already sent.
-    // We can only log it to the server console.
-    console.error("Failed to start background job:", err);
-  });
-  child.unref();
-  res.status(202).send({
-    message: "Job accepted and is running in the background.",
-    pid: child.pid, // You can optionally return the PID
-  });
+  try {
+    const { threshold, output, hexColor } = req.body;
+    const { fileName } = req.params;
 
-  console.log(`Job started with PID: ${child.pid}. Response sent to client.`);
+    // Validate inputs
+    if (!fileName || !output || !hexColor || !threshold) {
+      return res.status(400).json({ message: "Missing required parameters" });
+    }
+
+    // Build absolute JAR path
+    const jarPath = path.resolve(
+      "../target/CentroidFinder-jar-with-dependencies.jar"
+    );
+
+    // Build argument list
+    const jarArgs = [fileName, output, hexColor, threshold];
+
+    // Spawn detached Java process
+    const child = spawn("java", ["-jar", jarPath, ...jarArgs], {
+      detached: true,
+      stdio: "ignore", // don't tie to Express process
+    });
+
+    // Handle process errors
+    child.on("error", (err) => {
+      console.error("Failed to start background job:", err);
+    });
+
+    // Detach process from parent so Express can respond immediately
+    child.unref();
+
+    // Respond to client immediately (202 = Accepted, job running)
+    res.status(202).json({
+      message: "Job accepted and is running in the background.",
+      pid: child.pid,
+    });
+
+    console.log(`Background job started for ${fileName} (PID: ${child.pid})`);
+  } catch (error) {
+    console.error("Error starting video process:", error);
+    res.status(500).json({ message: "Internal server error" });
+  }
 };
 
 export const getStatus = (req, res) => {};

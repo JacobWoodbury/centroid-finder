@@ -7,6 +7,11 @@ const Jobs = sequelize.define("jobs", {
     type: DataTypes.INTEGER,
     autoIncrement: true,
   },
+  job_id: {
+    type: DataTypes.INTEGER,
+    allowNull: false,
+    unique: true,
+  },
   input_video_id: {
     type: DataTypes.INTEGER,
   },

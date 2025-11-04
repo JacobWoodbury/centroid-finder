@@ -20,7 +20,7 @@ centroidRouter.get("/thumbnail/:filename", getThumbnail);
 
 centroidRouter.get("/api/videos", getVideos);
 
-centroidRouter.post("/process/:filename", startVideoProcess);
+centroidRouter.post("/process/:fileName", startVideoProcess);
 
 centroidRouter.get("/process/:id/status", getStatus);
 
