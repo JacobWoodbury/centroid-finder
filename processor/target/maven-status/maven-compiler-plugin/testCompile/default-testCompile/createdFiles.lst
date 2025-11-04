@@ -1,0 +1,5 @@
+processor/src/main/java/io/github/jacobwoodbury/centroidFinder/EuclideanColorDistanceTest.class
+processor/src/main/java/io/github/jacobwoodbury/centroidFinder/DfsBinaryGroupFinderTest.class
+processor/src/main/java/io/github/jacobwoodbury/centroidFinder/DistanceImageBinarizerTest.class
+processor/src/main/java/io/github/jacobwoodbury/centroidFinder/VideoSummaryAppTest.class
+processor/src/main/java/io/github/jacobwoodbury/centroidFinder/BinarizingImageGroupFinderTest.class

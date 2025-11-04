@@ -1,0 +1,14 @@
+/Users/alexbolshakov/Desktop/grc-csi/Sdev334/week-3/centroid-finder/processor/src/main/java/io/github/jacobwoodbury/centroidFinder/BinarizingImageGroupFinder.java
+/Users/alexbolshakov/Desktop/grc-csi/Sdev334/week-3/centroid-finder/processor/src/main/java/io/github/jacobwoodbury/centroidFinder/BinaryGroupFinder.java
+/Users/alexbolshakov/Desktop/grc-csi/Sdev334/week-3/centroid-finder/processor/src/main/java/io/github/jacobwoodbury/centroidFinder/ColorDistanceFinder.java
+/Users/alexbolshakov/Desktop/grc-csi/Sdev334/week-3/centroid-finder/processor/src/main/java/io/github/jacobwoodbury/centroidFinder/Coordinate.java
+/Users/alexbolshakov/Desktop/grc-csi/Sdev334/week-3/centroid-finder/processor/src/main/java/io/github/jacobwoodbury/centroidFinder/DfsBinaryGroupFinder.java
+/Users/alexbolshakov/Desktop/grc-csi/Sdev334/week-3/centroid-finder/processor/src/main/java/io/github/jacobwoodbury/centroidFinder/DistanceImageBinarizer.java
+/Users/alexbolshakov/Desktop/grc-csi/Sdev334/week-3/centroid-finder/processor/src/main/java/io/github/jacobwoodbury/centroidFinder/EuclideanColorDistance.java
+/Users/alexbolshakov/Desktop/grc-csi/Sdev334/week-3/centroid-finder/processor/src/main/java/io/github/jacobwoodbury/centroidFinder/FrameProcessor.java
+/Users/alexbolshakov/Desktop/grc-csi/Sdev334/week-3/centroid-finder/processor/src/main/java/io/github/jacobwoodbury/centroidFinder/Group.java
+/Users/alexbolshakov/Desktop/grc-csi/Sdev334/week-3/centroid-finder/processor/src/main/java/io/github/jacobwoodbury/centroidFinder/ImageBinarizer.java
+/Users/alexbolshakov/Desktop/grc-csi/Sdev334/week-3/centroid-finder/processor/src/main/java/io/github/jacobwoodbury/centroidFinder/ImageGroupFinder.java
+/Users/alexbolshakov/Desktop/grc-csi/Sdev334/week-3/centroid-finder/processor/src/main/java/io/github/jacobwoodbury/centroidFinder/ImageSummaryApp.java
+/Users/alexbolshakov/Desktop/grc-csi/Sdev334/week-3/centroid-finder/processor/src/main/java/io/github/jacobwoodbury/centroidFinder/VideoSummaryApp.java
+/Users/alexbolshakov/Desktop/grc-csi/Sdev334/week-3/centroid-finder/processor/src/main/java/io/github/jacobwoodbury/centroidFinder/videoTest.java
