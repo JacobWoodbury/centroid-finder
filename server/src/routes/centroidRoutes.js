@@ -11,4 +11,13 @@ const centroidRouter = Router();
 
 //GET /process/{jobId}/status
 
+centroidRouter.get('/thumbnail/:filename', getThumbnail)
+
 centroidRouter.get('/api/videos', getVideos)
+
+centroidRouter.post('/process/:filename', startVideoProcess)
+
+centroidRouter.get('/process/:jobId/status', getVideos)
+
+
+export default centroidRouter
