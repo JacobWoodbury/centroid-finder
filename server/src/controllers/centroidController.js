@@ -1,9 +1,24 @@
+import fs from "fs";
+import path from "path";
+
 export const getVideos = (req, res) => {
-  const videos = null; // some function to get videos
-  if (videos) {
-    res.status(200).json(videos);
-  } else {
-    res.status(500).send("Error reading video directory");
+  try {
+    const videoDir = path.join("public", "videos");
+    fs.readdir(videoDir, (err, files) => {
+      if (err) {
+        console.error(err);
+        return res.status(500).send("Error reading video directory");
+      }
+
+      const videos = files.filter((file) => file.endsWith(".mp4"));
+
+      const videoUrls = videos.map((file) => `/videos/${file}`);
+
+      return res.json(videoUrls);
+    });
+  } catch (error) {
+    console.error("Error fetching videos:", error);
+    return res.status(500).json({ message: "Internal Server Error" });
   }
 };
 
