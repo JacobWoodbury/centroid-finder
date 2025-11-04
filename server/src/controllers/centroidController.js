@@ -29,9 +29,9 @@ export const getThumbnail = (req, res) => {
 export const startVideoProcess = (req, res) => {
   const { threshold, output, hexColor } = req.body;
   const { fileName } = req.params;
-
+    const jarArgs = [fileName, output, hexColor, threshold]
   const jarPath = "target/CentroidFinder-jar-with-dependencies.jar";
-  const child = spawn("java", ["-jar", jarPath], {
+  const child = spawn("java", ["-jar", jarPath, ...jarArgs], {
     detached: true,
     stdio: "ignore",
   });
