@@ -5,11 +5,6 @@ export const getVideos = (req, res) => {
   try {
     const videoDir = path.join("public", "videos");
     fs.readdir(videoDir, (err, files) => {
-      if (err) {
-        console.error(err);
-        return res.status(500).send("Error reading video directory");
-      }
-
       const videos = files.filter((file) => file.endsWith(".mp4"));
 
       const videoUrls = videos.map((file) => `/videos/${file}`);
