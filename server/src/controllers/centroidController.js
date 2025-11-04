@@ -27,23 +27,26 @@ export const getThumbnail = (req, res) => {
 };
 
 export const startVideoProcess = (req, res) => {
-    const jarPath = 'target/CentroidFinder-jar-with-dependencies.jar'
-    const child = spawn('java', ['-jar', jarPath], {
-        detached: true,
-        stdio: 'ignore'
-      })
-      child.on('error', (err) => {
-        // Note: We can't send a response here if one was already sent.
-        // We can only log it to the server console.
-        console.error('Failed to start background job:', err);
-      })
-      child.unref();
-      res.status(202).send({
-        message: 'Job accepted and is running in the background.',
-        pid: child.pid // You can optionally return the PID
-      });
-    
-      console.log(`Job started with PID: ${child.pid}. Response sent to client.`);
-    }
+  const { threshold, output, hexColor } = req.body;
+  const { fileName } = req.params;
+
+  const jarPath = "target/CentroidFinder-jar-with-dependencies.jar";
+  const child = spawn("java", ["-jar", jarPath], {
+    detached: true,
+    stdio: "ignore",
+  });
+  child.on("error", (err) => {
+    // Note: We can't send a response here if one was already sent.
+    // We can only log it to the server console.
+    console.error("Failed to start background job:", err);
+  });
+  child.unref();
+  res.status(202).send({
+    message: "Job accepted and is running in the background.",
+    pid: child.pid, // You can optionally return the PID
+  });
+
+  console.log(`Job started with PID: ${child.pid}. Response sent to client.`);
+};
 
 export const getStatus = (req, res) => {};
