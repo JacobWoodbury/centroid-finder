@@ -16,7 +16,7 @@ const centroidRouter = Router();
 
 //GET /process/{jobId}/status
 
-centroidRouter.get("/thumbnail/:filename", getThumbnail);
+centroidRouter.get("/thumbnail/:fileName", getThumbnail);
 
 centroidRouter.get("/api/videos", getVideos);
 

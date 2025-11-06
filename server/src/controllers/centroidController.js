@@ -1,20 +1,28 @@
-import { spawn } from "child_process";
+import { spawn, exec } from "child_process";
 import path from "path";
 import fs from "fs";
 import { fileURLToPath } from "url";
+import ffmpegPath from 'ffmpeg-static';
+
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
+const videoDir = path.join("public", "videos");
 
 export const getVideos = (req, res) => {
   try {
-    const videoDir = path.join("public", "videos");
+    
     fs.readdir(videoDir, (err, files) => {
-      const videos = files.filter((file) => file.endsWith(".mp4"));
+      if(!err){
+        const videos = files.filter((file) => file.endsWith(".mp4"));
 
-      const videoUrls = videos.map((file) => `/videos/${file}`);
+        const videoUrls = videos.map((file) => `/videos/${file}`);
+        return res.json(videoUrls);
+      }else{
+        return res.send(err)
+      }
 
-      return res.json(videoUrls);
+      
     });
   } catch (error) {
     console.error("Error fetching videos:", error);
@@ -23,12 +31,34 @@ export const getVideos = (req, res) => {
 };
 
 export const getThumbnail = (req, res) => {
-  const thumbnail = null; // some function to get thumbnail
-  if (thumbnail) {
-    res.status(200).json(thumbnail);
+  //PATHS------------
+  const videoPath = path.join(videoDir,"ball.mp4" )
+  const thumbnailDir = path.join('public', 'thumbnails');
+if (!fs.existsSync(thumbnailDir)) {
+  fs.mkdirSync(thumbnailDir, { recursive: true });
+}
+const thumbnailPath = path.join(thumbnailDir, `Ball.jpg`);
+
+
+  //using ffmpeg---------
+  //ffmpegPath then use videoPath as input, jump to 1 second in the video get 1 frame, -vf formatting Width 320: height -match to aspect ratio
+  const command = `"${ffmpegPath}" -i ${videoPath} -ss 00:00:01 -vframes 1 -vf "scale=320:-1" ${thumbnailPath}`;
+  exec(command, (error)=>{
+    if(error){
+      console.error(error.message)
+      return;
+    }
+  })
+
+  //grabbing the image to send ------
+  const absolutePath = path.join(process.cwd(), thumbnailPath);
+
+  if (thumbnailPath) {
+    res.status(200).sendFile(absolutePath);
   } else {
-    res.status(500).send("Error reading video directory");
+    res.status(500).send("Error generating thumbnail");
   }
+  
 };
 
 export const startVideoProcess = (req, res) => {
