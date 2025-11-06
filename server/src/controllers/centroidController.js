@@ -48,16 +48,17 @@ const thumbnailPath = path.join(thumbnailDir, `Ball.jpg`);
       console.error(error.message)
       return;
     }
-  })
+     const absolutePath = path.join(process.cwd(), thumbnailPath);
 
-  //grabbing the image to send ------
-  const absolutePath = path.join(process.cwd(), thumbnailPath);
-
-  if (thumbnailPath) {
+  if (absolutePath) {
     res.status(200).sendFile(absolutePath);
   } else {
     res.status(500).send("Error generating thumbnail");
   }
+  })
+
+  //grabbing the image to send ------
+ 
   
 };
 
