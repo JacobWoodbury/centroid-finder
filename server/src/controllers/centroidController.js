@@ -32,12 +32,13 @@ export const getVideos = (req, res) => {
 
 export const getThumbnail = (req, res) => {
   //PATHS------------
-  const videoPath = path.join(videoDir,"ball.mp4" )
+  const {fileName} = req.params
+  const videoPath = path.join(videoDir,fileName)
   const thumbnailDir = path.join('public', 'thumbnails');
 if (!fs.existsSync(thumbnailDir)) {
   fs.mkdirSync(thumbnailDir, { recursive: true });
 }
-const thumbnailPath = path.join(thumbnailDir, `Ball.jpg`);
+const thumbnailPath = path.join(thumbnailDir, fileName + ".jpeg");
 
 
   //using ffmpeg---------

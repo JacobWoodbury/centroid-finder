@@ -41,10 +41,10 @@ public class VideoSummaryApp {
             grabber.start();
             Frame frame = grabber.grabImage();
            
-               
+                ColorDistanceFinder distanceFinder = new EuclideanColorDistance();
             while(frame != null){
                 FrameProcessor processor = new FrameProcessor();
-                processor.process(frame, writer, targetColor, threshold, toBufferedImage);
+                processor.process(frame, writer, targetColor, threshold, toBufferedImage, distanceFinder);
                
                 frame = grabber.grabImage();
             }

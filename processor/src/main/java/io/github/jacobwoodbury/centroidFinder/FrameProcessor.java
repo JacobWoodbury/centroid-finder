@@ -8,13 +8,13 @@ import org.bytedeco.javacv.Frame;
 import org.bytedeco.javacv.Java2DFrameConverter;
 
 public class FrameProcessor {
-    public void process(Frame frame, PrintWriter writer, int targetColor, int threshold, Java2DFrameConverter toBufferedImage){
-         int timeStamp = (int) (frame.timestamp/1000000);
+    public void process(Frame frame, PrintWriter writer, int targetColor, int threshold, Java2DFrameConverter toBufferedImage, ColorDistanceFinder distanceFinder){
+         double timeStamp = (double) (frame.timestamp/1000000.0);
             //Buffered image conversion
             BufferedImage image = toBufferedImage.convert(frame);
             //Buffered image colored
             //Create the DistanceImageBinarizer with a EuclideanColorDistance instance.
-            ColorDistanceFinder distanceFinder = new EuclideanColorDistance();
+           
             ImageBinarizer binarizer = new DistanceImageBinarizer(distanceFinder, targetColor, threshold);
             
             //maybe we need to write the B&W image here?           
@@ -31,7 +31,7 @@ public class FrameProcessor {
             if(largest.centroid() == null){
                 writer.println(timeStamp + "(-1,-1)");
             }else{
-                writer.println(timeStamp + ", "+ "("+ largest.centroid().x() + "," + largest.centroid().y() + ")");
+                writer.println(String.format("%.2f", timeStamp) + " "+ largest.centroid().x() + " " + largest.centroid().y());
             }
             writer.flush();
             //grab the next frame
