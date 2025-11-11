@@ -5,6 +5,7 @@ const Videos = sequelize.define("videos", {
   id: {
     primaryKey: true,
     type: DataTypes.INTEGER,
+    autoIncrement: true,
   },
   filename: {
     type: DataTypes.STRING,
