@@ -1,8 +1,8 @@
 
-# This fixes the native library (SIGSEGV) crash
+# lets our java app run 
 FROM eclipse-temurin:21-jre-jammy
 
-# Install curl, which is needed to download the Node.js setup script
+# install curl, so that we can add node
 RUN apt-get update && \
     apt-get install -y curl && \
     rm -rf /var/lib/apt/lists/*
@@ -18,23 +18,22 @@ RUN apt-get install -y nodejs
 # Set the working directory inside the container
 WORKDIR /app
 
+#set up the server folder
 RUN mkdir -p /app/server
 WORKDIR /app/server
 
-# Copy package.json and package-lock.json first
+# Copy package.json and package-lock.json first so that it only re runs npm i if packages change
 COPY server/package*.json /app/server/
 
+#make a target folder for the jar (we don't need the rest of processor I believe)
 RUN mkdir -p /app/processor/target
 COPY processor/target/CentroidFinder-jar-with-dependencies.jar /app/processor/target
 
-# Install project dependencies
 RUN npm install
 
-# Copy the rest of your server's code (src, public, etc.)
+#copy the rest of the server
 COPY /server /app/server/
 
-# Your server.js listens on process.env.PORT.
 EXPOSE 3000
 
-# The command to run your server
 CMD [ "npm", "run", "dev" ]
