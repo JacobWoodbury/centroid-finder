@@ -1,6 +1,6 @@
 import express from "express";
 import dotenv from "dotenv";
-import db from "../src/models/index.js"
+
 import colors from "colors";
 import cors from "cors";
 import centroidRouter from "./routes/centroidRoutes.js";
@@ -15,7 +15,7 @@ app.use(cors());
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
 
-await db.sequelize.sync();
+
 
 app.use("/", centroidRouter);
 

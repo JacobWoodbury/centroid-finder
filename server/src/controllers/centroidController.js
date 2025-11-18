@@ -3,23 +3,41 @@ import path from "path";
 import fs from "fs";
 import { fileURLToPath } from "url";
 import ffmpegPath from "ffmpeg-static";
-import db from "../models/index.js"
 
+import { randomUUID } from "crypto";
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
-const videoDir = path.join("public", "videos");
+const videoDir = "/videos"
 
+/**
+ * In-memory "database" to store job status.
+ * This will be cleared if the server restarts.
+ * * Map structure:
+ * { 
+ * "job-id-uuid" => { 
+ * id: "job-id-uuid", 
+ * filename: "video.mp4",
+ * job_status: "processing" | "done" | "error",
+ * output_path: "video.mp4.csv",
+ * started_at: Date,
+ * completed_at: Date | null,
+ * error: string | null 
+ * }
+ * }
+ */
+const jobStore = new Map();
+
+// --- No changes to getVideos ---
 export const getVideos = (req, res) => {
   try {
-    
     fs.readdir(videoDir, (err, files) => {
-      if(!err){
+      if (!err) {
         const videos = files.filter((file) => file.endsWith(".mp4"));
 
         const videoUrls = videos.map((file) => `/videos/${file}`);
         return res.json(videoUrls);
-      }else{
+      } else {
         return res.send(err);
       }
     });
@@ -29,11 +47,12 @@ export const getVideos = (req, res) => {
   }
 };
 
+// --- No changes to getThumbnail ---
 export const getThumbnail = (req, res) => {
   //PATHS------------
-  try{
-    const {fileName} = req.params
-    const videoPath = path.join(videoDir,fileName);
+  try {
+    const { fileName } = req.params;
+    const videoPath = path.join(videoDir, fileName);
     const thumbnailDir = path.join("public", "thumbnails");
     if (!fs.existsSync(thumbnailDir)) {
       fs.mkdirSync(thumbnailDir, { recursive: true });
@@ -41,57 +60,61 @@ export const getThumbnail = (req, res) => {
     const thumbnailPath = path.join(thumbnailDir, fileName + ".jpeg");
 
     //using ffmpeg---------
-    //ffmpegPath then use videoPath as input, jump to 1 second in the video get 1 frame, -vf formatting Width 320: height -match to aspect ratio
-    const command = `"${ffmpegPath}" -i ${videoPath} -ss 00:00:01 -vframes 1 -vf "scale=320:-1" ${thumbnailPath} -y`;
-    exec(command, (error)=>{
-      if(error){
-        console.error(error.message)
+    const command = `"${ffmpegPath}" -i ${videoPath} -ss 00:00:01 -vframes 1 -vf "scale=320:-1" -update 1 ${thumbnailPath} -y`;
+    exec(command, (error) => {
+      if (error) {
+        console.error(error.message);
         return res.status(500).send("Error generating thumbnail");
       }
       const absolutePath = path.join(process.cwd(), thumbnailPath);
-    
+
       if (absolutePath) {
         res.status(200).sendFile(absolutePath);
       } else {
         res.status(500).send("Error generating thumbnail");
       }
-    })
-  }catch(error){
+    });
+  } catch (error) {
     res.status(500).send("error generating thumbnail");
   }
 };
 
-export const startVideoProcess = async (req, res) => {
+// --- startVideoProcess (Database logic removed) ---
+export const startVideoProcess = (req, res) => { // 'async' removed, not needed
   try {
     const { threshold, hexColor } = req.body;
     const { fileName } = req.params;
-    const output =  fileName +".csv";
+    const output = fileName + ".csv";
     if (!fileName || !hexColor || !threshold) {
       return res.status(400).json({ message: "Missing required parameters" });
     }
-   //we might need to check if the output name already exists in our output folder. 
+
     const jarPath = path.resolve(
       __dirname,
       "../../../processor/target/CentroidFinder-jar-with-dependencies.jar"
     );
-    const inputPath = path.resolve(__dirname, "../../public/videos", fileName);
-    const outputPath = path.resolve(__dirname, "../../public/output", output);
+    const inputPath = path.resolve("/videos", fileName);
+    const outputPath = path.resolve("/results", output);
 
-    const [videoRecord, created] = await db.Videos.findOrCreate({
-      where: { filename: fileName },
-      defaults: {
-        filename: fileName,
-        filepath: inputPath,
-      },
-    });
+    // --- Database logic replaced with in-memory map ---
+    
+    // 1. Create a new Job ID
+    const jobId = randomUUID();
 
-    const newJob = await db.Jobs.create({
-      input_video_id: videoRecord.id,
+    // 2. Create a job object and store it
+    const newJob = {
+      id: jobId,
+      filename: fileName,
       job_status: "processing",
       progress: 0,
-      output_path: fileName+ ".csv",
+      output_path: output,
       started_at: new Date(),
-    });
+      completed_at: null,
+      error: null,
+    };
+    jobStore.set(jobId, newJob);
+
+    // --- End of new in-memory logic ---
 
     const jarArgs = [inputPath, outputPath, hexColor, threshold];
 
@@ -101,77 +124,95 @@ export const startVideoProcess = async (req, res) => {
       detached: true,
       stdio: ["ignore", "pipe", "pipe"],
     });
+
+    let errorOutput = ""; // Store error messages from stderr
     child.stdout.on("data", (data) => {
-      //check process output
-      console.log(`Job ${newJob.id} STDOUT: ${data.toString()}`);
+      console.log(`Job ${jobId} STDOUT: ${data.toString()}`);
     });
 
     child.stderr.on("data", (data) => {
-      // for checking errors from process
-      console.error(`Job ${newJob.id} STDERR: ${data.toString()}`);
+      const errorMsg = data.toString();
+      console.error(`Job ${jobId} STDERR: ${errorMsg}`);
+      errorOutput += errorMsg; // Collect error messages
     });
 
     child.on("error", (err) => {
       console.error("Failed to start background job:", err);
+      // Update job in store
+      const job = jobStore.get(jobId);
+      if (job) {
+        job.job_status = "error";
+        job.completed_at = new Date();
+        job.error = err.message || "Failed to start process";
+        jobStore.set(jobId, job);
+      }
     });
-    //checks for the end of the process, if code is 0 it was successful.
-    child.on("exit", async (code)=>{
-      console.log(code)
-      const job = await db.Jobs.findOne({
-        where: { id: newJob.id },
-      });
-      job.job_status = (code == 0? "done": "error");
-      job.completed_at = new Date();
-      await job.save();
+    
+    // checks for the end of the process, if code is 0 it was successful.
+    child.on("exit", (code) => { // 'async' removed
+      console.log(`Job ${jobId} exited with code ${code}`);
+      
+      // --- Database logic replaced with in-memory map update ---
+      const job = jobStore.get(jobId);
+      if (job) {
+        job.job_status = (code == 0 ? "done" : "error");
+        job.completed_at = new Date();
+        if (code != 0) {
+          job.error = errorOutput || "Process failed with non-zero exit code.";
+        }
+        jobStore.set(jobId, job);
+        console.log(`Job ${jobId} status updated to ${job.job_status}`);
+      } else {
+        console.error(`Job ${jobId} not found in store after exit.`);
+      }
+      // --- End of in-memory update ---
     });
 
     child.unref();
 
     res.status(202).json({
       message: "Job accepted and running in background.",
-      id: newJob.id,
+      id: jobId, // Return the new UUID
     });
 
-    
-    console.log(`Background job started for ${fileName} (ID: ${newJob.id})`);
+    console.log(`Background job started for ${fileName} (ID: ${jobId})`);
   } catch (error) {
     console.error("Error starting video process:", error);
     res.status(500).json({ message: "Internal server error" });
   }
 };
 
-export const getStatus = async (req, res) => {
-  try{
-    const {id} = req.params
+// --- getStatus (Database logic removed) ---
+export const getStatus = (req, res) => { // 'async' removed
+  try {
+    const { id } = req.params;
     if (!id) {
-      return res.status(404).json({ message: "Job ID not found" });
+      return res.status(404).json({ message: "Job ID not provided" });
     }
-    
-     const job = await db.Jobs.findOne({
-      where: { id: id },
-      include: {
-        model: db.Videos,
-        attributes: ["filename"],
-      },
-    });
-      if (!job) {
+
+    // --- Database logic replaced with in-memory map lookup ---
+    const job = jobStore.get(id);
+    // --- End of in-memory lookup ---
+
+    if (!job) {
       return res.status(404).json({ message: "Job ID not found." });
     }
-    if(job.job_status == "error"){
-        return res.status(200).json({
+
+    if (job.job_status == "error") {
+      return res.status(200).json({
         status: job.job_status,
-        error: "Error processing video: Unexpected ffmpeg error"
-      })
+        error: job.error || "Error processing video: Unexpected error",
+      });
     }
+
     res.status(200).json({
       status: job.job_status,
-      result: `/output/${job.output_path}`,
-
+      // Only show the result path if the job is actually done
+      result: job.job_status === "done" ? job.output_path : null,
     });
     
-    
-  }catch(error){
-      res.status(500).send("Error fetching job status");
-    }
-
+  } catch (error) {
+    console.error("Error fetching job status:", error);
+    res.status(500).send("Error fetching job status");
+  }
 };
