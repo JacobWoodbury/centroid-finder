@@ -1,22 +1,41 @@
-# syntax=docker/dockerfile:1
+# 1. Start with an image that already has Java 21 (class file 65.0).
+# This 'eclipse-temurin' image is based on Ubuntu 22.04 ("Jammy").
+FROM eclipse-temurin:21-jre-jammy
 
-# Comments are provided throughout this file to help you get started.
-# If you need more help, visit the Dockerfile reference guide at
-# https://docs.docker.com/go/dockerfile-reference/
+# 2. Set the working directory
+WORKDIR /app
 
-# Want to help us make this template better? Share your feedback here: https://forms.gle/ybq9Krt8jtBL3iCk7
+# 3. --- Install System Dependencies ---
+# We need:
+#   - ffmpeg: (for your Node.js app)
+#   - curl: (to download the Node.js setup script)
+#   - nodejs: (to run npm)
+RUN apt-get update && \
+    apt-get install -y \
+    ffmpeg \
+    curl \
+    && rm -rf /var/lib/apt/lists/*
 
-ARG NODE_VERSION=22.13.0
+# 4. --- Install Node.js 18 ---
+# We'll use the official NodeSource setup script.
+# This ensures we get Node 18 and not the old one from the OS.
+RUN curl -fsSL https://deb.nodesource.com/setup_18.x | bash - && \
+    apt-get install -y nodejs
 
-FROM node:${NODE_VERSION}-alpine
+# 5. --- Configure Node.js Server ---
+# Copy package manifests first to cache the 'npm install' layer
+COPY server/package*.json ./
 
-WORKDIR /centroid-finder
-EXPOSE 3000
+# Install Node.js dependencies
+RUN npm install
+
+# 6. --- Copy Your Application Code ---
+# Copy the rest of your server code and your Java .jar file
 COPY . .
 
-RUN npm i
+# 7. --- Expose and Run ---
+# Expose the port your Node.js server listens on
+EXPOSE 3000
 
-CMD [ "npm", "run", "dev" ]
-
-
-
+# The command to run your server
+CMD ["node", "server/src/server.js"]

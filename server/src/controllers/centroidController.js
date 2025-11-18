@@ -84,13 +84,31 @@ export const startVideoProcess = async (req, res) => {
         filepath: inputPath,
       },
     });
+
+    const newJob = await db.Jobs.create({
+      input_video_id: videoRecord.id,
+      job_status: "processing",
+      progress: 0,
+      output_path: fileName+ ".csv",
+      started_at: new Date(),
+    });
+
     const jarArgs = [inputPath, outputPath, hexColor, threshold];
 
     console.log("Executing:", ["java", "-jar", jarPath, ...jarArgs]);
 
     const child = spawn("java", ["-jar", jarPath, ...jarArgs], {
       detached: true,
-      stdio: "ignore",
+      stdio: ["ignore", "pipe", "pipe"],
+    });
+    child.stdout.on("data", (data) => {
+      //check process output
+      console.log(`Job ${newJob.id} STDOUT: ${data.toString()}`);
+    });
+
+    child.stderr.on("data", (data) => {
+      // for checking errors from process
+      console.error(`Job ${newJob.id} STDERR: ${data.toString()}`);
     });
 
     child.on("error", (err) => {
@@ -98,8 +116,9 @@ export const startVideoProcess = async (req, res) => {
     });
     //checks for the end of the process, if code is 0 it was successful.
     child.on("exit", async (code)=>{
+      console.log(code)
       const job = await db.Jobs.findOne({
-        where: { job_id: child.pid },
+        where: { id: newJob.id },
       });
       job.job_status = (code == 0? "done": "error");
       job.completed_at = new Date();
@@ -110,18 +129,11 @@ export const startVideoProcess = async (req, res) => {
 
     res.status(202).json({
       message: "Job accepted and running in background.",
-      pid: child.pid,
+      id: newJob.id,
     });
 
-    const newJob = await db.Jobs.create({
-      job_id: child.pid,
-      input_video_id: videoRecord.id,
-      job_status: "processing",
-      progress: 0,
-      output_path: fileName+ ".csv",
-      started_at: new Date(),
-    });
-    console.log(`Background job started for ${fileName} (PID: ${child.pid})`);
+    
+    console.log(`Background job started for ${fileName} (ID: ${newJob.id})`);
   } catch (error) {
     console.error("Error starting video process:", error);
     res.status(500).json({ message: "Internal server error" });
@@ -136,7 +148,7 @@ export const getStatus = async (req, res) => {
     }
     
      const job = await db.Jobs.findOne({
-      where: { job_id: id },
+      where: { id: id },
       include: {
         model: db.Videos,
         attributes: ["filename"],
@@ -146,7 +158,7 @@ export const getStatus = async (req, res) => {
       return res.status(404).json({ message: "Job ID not found." });
     }
     if(job.job_status == "error"){
-      res.status(200).json({
+        return res.status(200).json({
         status: job.job_status,
         error: "Error processing video: Unexpected ffmpeg error"
       })

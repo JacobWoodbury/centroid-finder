@@ -1,6 +1,6 @@
 import express from "express";
 import dotenv from "dotenv";
-import db from "./models/index.js";
+import db from "../src/models/index.js"
 import colors from "colors";
 import cors from "cors";
 import centroidRouter from "./routes/centroidRoutes.js";

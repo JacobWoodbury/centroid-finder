@@ -3,7 +3,7 @@ package io.github.jacobwoodbury.centroidFinder;
 import java.awt.image.BufferedImage;
 import java.io.PrintWriter;
 import java.util.List;
-
+import io.github.jacobwoodbury.centroidFinder.Group;
 import org.bytedeco.javacv.Frame;
 import org.bytedeco.javacv.Java2DFrameConverter;
 
@@ -26,11 +26,12 @@ public class FrameProcessor {
             List<Group> groups = groupFinder.findConnectedGroups(image);
 
             //grab the first (largest)
-            Group largest = groups.get(0);
+            
             //print to our csv in (timestamp, x, y) as a row
-            if(largest.centroid() == null){
+            if(groups.isEmpty()){
                 writer.println(timeStamp + "-1 -1");
             }else{
+                Group largest = groups.get(0);
                 writer.println(String.format("%.2f", timeStamp) + " "+ largest.centroid().x() + " " + largest.centroid().y());
             }
             writer.flush();
