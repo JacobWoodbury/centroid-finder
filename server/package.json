@@ -1,0 +1,28 @@
+{
+  "name": "centroid-finder",
+  "version": "1.0.0",
+  "main": "src/server.js",
+  "type": "module",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1",
+    "dev": "node src/server.js"
+  },
+  "author": "Alex Bolshakov, Jacob Woodbury",
+  "license": "ISC",
+  "description": "",
+  "dependencies": {
+    "@ffmpeg/ffmpeg": "^0.12.15",
+    "@ffmpeg/util": "^0.12.2",
+    "colors": "^1.4.0",
+    "cors": "^2.8.5",
+    "dotenv": "^17.2.3",
+    "express": "^5.1.0",
+    "ffmpeg": "^0.0.4",
+    "ffmpeg-static": "^5.2.0",
+    "mysql2": "^3.15.3",
+    "sequelize": "^6.37.7"
+  },
+  "devDependencies": {
+    "nodemon": "^3.1.10"
+  }
+}
