@@ -3,7 +3,8 @@ import dotenv from "dotenv";
 
 import colors from "colors";
 import cors from "cors";
-import centroidRouter from "./routes/centroidRoutes.js";
+import jobsRouter from "./routes/jobsRoutes.js";
+import videoRouter from "./routes/videosRoutes.js";
 
 dotenv.config();
 
@@ -15,9 +16,8 @@ app.use(cors());
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
 
-
-
-app.use("/", centroidRouter);
+app.use("/", jobsRouter);
+app.use("/", videoRouter);
 
 app.listen(PORT, () => {
   console.log(`Server listening at http://localhost:${PORT}`.bgYellow);
