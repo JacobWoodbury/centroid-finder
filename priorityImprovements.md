@@ -7,6 +7,10 @@ adding tests (required)
 improving error handling (required)
     -server controller needs more precise handling
     -add logging to better understand errors in processor/server
+
+PR Started--------------
 writing documentation (required)
     -add documentation to new classes in video summary/ server
     -clean up existing documentation
+
+Completed---------------
