@@ -1,6 +1,12 @@
 import sequelize from "../db/connection.js";
 import { DataTypes } from "sequelize";
 
+/**
+ * Sequelize model representing the 'jobs' table.
+ *
+ * Tracks the status of background processing tasks.
+ * Linked to the Videos table via input_video_id.
+ */
 const Jobs = sequelize.define("jobs", {
   id: {
     primaryKey: true,

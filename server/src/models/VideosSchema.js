@@ -1,6 +1,12 @@
 import sequelize from "../db/connection.js";
 import { DataTypes } from "sequelize";
 
+/**
+ * Sequelize model representing the 'videos' table.
+ *
+ * Stores metadata about uploaded video files including filename, path,
+ * duration, and upload timestamp.
+ */
 const Videos = sequelize.define("videos", {
   id: {
     primaryKey: true,

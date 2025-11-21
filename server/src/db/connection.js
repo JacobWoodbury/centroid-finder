@@ -2,6 +2,13 @@ import { Sequelize } from "sequelize";
 import dotenv from "dotenv";
 import colors from "colors";
 
+/**
+ * Establishes and authenticates the connection to the MySQL database.
+ *
+ * Configuration is loaded from environment variables (DB_HOST, DB_USER, etc.).
+ * On success, logs a green message; on failure, logs a red error.
+ */
+
 dotenv.config();
 
 const { DB_HOST, DB_PORT, DB_USERNAME, DB_PASSWORD, DB_DATABASE, DB_DIALECT } =

@@ -73,7 +73,6 @@ public class DistanceImageBinarizer implements ImageBinarizer {
      */
     @Override
     public BufferedImage toBufferedImage(int[][] image) {
-        //I think image is organized as R, C
         int height = image.length;
         int width = image[0].length;
         BufferedImage result = new BufferedImage(width, height, BufferedImage.TYPE_INT_ARGB);
