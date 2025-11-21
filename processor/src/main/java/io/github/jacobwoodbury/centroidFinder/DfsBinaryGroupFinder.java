@@ -54,7 +54,7 @@ public class DfsBinaryGroupFinder implements BinaryGroupFinder {
                     map.put("maxY", 0);
                    
                     dfsIterative(image, new Coordinate(c, r), map);
-
+                    
                     Coordinate centroid = new Coordinate(map.get("maxX")/map.get("size"), map.get("maxY")/map.get("size"));
                     Group island = new Group(map.get("size"), centroid);
                     groupList.add(island);
