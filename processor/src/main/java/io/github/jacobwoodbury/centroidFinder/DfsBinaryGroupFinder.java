@@ -67,27 +67,13 @@ public class DfsBinaryGroupFinder implements BinaryGroupFinder {
         return groupList;
     }
     
-    private void dfs(int[][] image, Coordinate point, Map<String, Integer> map){
-        int[][] directions = {{-1,0},{1,0},{0,-1},{0,1}};
-
-        for (int[] direction : directions) {
-            int newR = point.y() + direction[0];
-            int newC = point.x() + direction[1];
-
-            if(newR < 0 || newR >= image.length || newC < 0 || newC >= image[0].length ) continue;
-            if(image[newR][newC] != 1) continue;
-            image[newR][newC] = 2;
-
-            map.put("size", map.get("size")+1);
-            map.put("maxX", map.get("maxX")+newC);
-            map.put("maxY", map.get("maxY")+newR);
-
-            dfs(image,new Coordinate(newC,newR), map);
-            
-        }
-        return;
-    }
-
+        /**
+     * Performs an iterative DFS to find all connected pixels in a group.
+     *
+     * @param image The binary image array.
+     * @param point The starting coordinate.
+     * @param map   A map to accumulate group statistics (size, sum of X, sum of Y).
+     */
         private void dfsIterative(int[][] image, Coordinate point, Map<String, Integer> map){
         int[][] directions = {{-1,0},{1,0},{0,-1},{0,1}};
         Stack<Coordinate> stack = new Stack<>();
