@@ -9,8 +9,21 @@ import org.bytedeco.javacv.*;
 
 
 public class VideoSummaryApp {
+
+    /**
+     * Runs the application.
+     *
+     * Usage: java VideoSummaryApp <input_path> <outputCsv> <hex_target_color> <threshold>
+     *
+     * Arguments:
+     * - input_path: Path to the source video file.
+     * - outputCsv: Path where the output CSV will be written.
+     * - hex_target_color: The target RGB color in hex format (e.g., FF0000 for red).
+     * - threshold: The integer distance threshold for color matching.
+     *
+     * @param args Command-line arguments.
+     */
     public static void main(String args[]){
-//handle Args
         if (args.length < 4) {
             System.out.println("Usage: java VideoSummaryApp <input_path> <outputCsv> <hex_target_color> <threshold>");
             return;

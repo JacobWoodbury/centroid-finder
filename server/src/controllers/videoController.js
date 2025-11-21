@@ -5,7 +5,6 @@ import ffmpegPath from "ffmpeg-static";
 
 const videoDir = "/videos";
 
-// --- No changes to getVideos ---
 export const getVideos = (req, res) => {
   try {
     fs.readdir(videoDir, (err, files) => {
@@ -24,7 +23,6 @@ export const getVideos = (req, res) => {
   }
 };
 
-// --- No changes to getThumbnail ---
 export const getThumbnail = (req, res) => {
   //PATHS------------
   try {
