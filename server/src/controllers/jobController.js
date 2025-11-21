@@ -6,27 +6,12 @@ import { randomUUID } from "crypto";
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
 
-/**
- * In-memory "database" to store job status.
- * This will be cleared if the server restarts.
- * * Map structure:
- * {
- * "job-id-uuid" => {
- * id: "job-id-uuid",
- * filename: "video.mp4",
- * job_status: "processing" | "done" | "error",
- * output_path: "video.mp4.csv",
- * started_at: Date,
- * completed_at: Date | null,
- * error: string | null
- * }
- * }
- */
+//For in memory
 const jobStore = new Map();
 
-// --- startVideoProcess (Database logic removed) ---
+
 export const startVideoProcess = (req, res) => {
-  // 'async' removed, not needed
+
   try {
     const { threshold, hexColor } = req.body;
     const { fileName } = req.params;
@@ -42,12 +27,12 @@ export const startVideoProcess = (req, res) => {
     const inputPath = path.resolve("/videos", fileName);
     const outputPath = path.resolve("/results", output);
 
-    // --- Database logic replaced with in-memory map ---
-
-    // 1. Create a new Job ID
+    
+    //For in memory
+    // Create a new Job ID
     const jobId = randomUUID();
 
-    // 2. Create a job object and store it
+    // Create a job object and store it
     const newJob = {
       id: jobId,
       filename: fileName,
@@ -60,7 +45,7 @@ export const startVideoProcess = (req, res) => {
     };
     jobStore.set(jobId, newJob);
 
-    // --- End of new in-memory logic ---
+    // --- End of in-memory logic ---
 
     const jarArgs = [inputPath, outputPath, hexColor, threshold];
 
@@ -96,7 +81,6 @@ export const startVideoProcess = (req, res) => {
 
     // checks for the end of the process, if code is 0 it was successful.
     child.on("exit", (code) => {
-      // 'async' removed
       console.log(`Job ${jobId} exited with code ${code}`);
 
       // --- Database logic replaced with in-memory map update ---
@@ -119,7 +103,7 @@ export const startVideoProcess = (req, res) => {
 
     res.status(202).json({
       message: "Job accepted and running in background.",
-      id: jobId, // Return the new UUID
+      id: jobId, 
     });
 
     console.log(`Background job started for ${fileName} (ID: ${jobId})`);
@@ -129,23 +113,17 @@ export const startVideoProcess = (req, res) => {
   }
 };
 
-// --- getStatus (Database logic removed) ---
+
 export const getStatus = (req, res) => {
-  // 'async' removed
   try {
     const { id } = req.params;
     if (!id) {
       return res.status(404).json({ message: "Job ID not provided" });
     }
-
-    // --- Database logic replaced with in-memory map lookup ---
     const job = jobStore.get(id);
-    // --- End of in-memory lookup ---
-
     if (!job) {
       return res.status(404).json({ message: "Job ID not found." });
     }
-
     if (job.job_status == "error") {
       return res.status(200).json({
         status: job.job_status,

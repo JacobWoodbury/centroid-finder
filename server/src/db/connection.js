@@ -4,6 +4,12 @@ import colors from "colors";
 
 dotenv.config();
 
+/**
+ * Database Connection Configuration.
+ *
+ * Establishes a connection to the MySQL database using Sequelize.
+ * Credentials are read from environment variables.
+ */
 const { DB_HOST, DB_PORT, DB_USERNAME, DB_PASSWORD, DB_DATABASE, DB_DIALECT } =
   process.env;
 console.log(process.env);
