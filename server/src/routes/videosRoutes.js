@@ -1,10 +1,10 @@
 import { Router } from "express";
 import { getVideos, getThumbnail } from "../controllers/videoController.js";
 
-const centroidRouter = Router();
+const videoRouter = Router();
 
-centroidRouter.get("/thumbnail/:fileName", getThumbnail);
+videoRouter.get("/thumbnail/:fileName", getThumbnail);
 
-centroidRouter.get("/api/videos", getVideos);
+videoRouter.get("/api/videos", getVideos);
 
-export default centroidRouter;
+export default videoRouter;

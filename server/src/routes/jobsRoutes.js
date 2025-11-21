@@ -1,10 +1,10 @@
 import { Router } from "express";
 import { getStatus, startVideoProcess } from "../controllers/jobController.js";
 
-const centroidRouter = Router();
+const jobRouter = Router();
 
-centroidRouter.post("/process/:fileName", startVideoProcess);
+jobRouter.post("/process/:fileName", startVideoProcess);
 
-centroidRouter.get("/process/:id/status", getStatus);
+jobRouter.get("/process/:id/status", getStatus);
 
-export default centroidRouter;
+export default jobRouter;
