@@ -3,26 +3,29 @@ import dotenv from "dotenv";
 import cors from "cors";
 import jobsRouter from "./routes/jobsRoutes.js";
 import videoRouter from "./routes/videosRoutes.js";
+import logger from "./utils/logger.js"; // Import Winston logger
 
-/**
- * Main entry point for the Express server.
- *
- * This file configures the application middleware (CORS, JSON parsing),
- * loads environment variables, and sets up the routing for the API.
- */
 dotenv.config();
 
-const { PORT } = process.env;
+const PORT = process.env.PORT || 3000;
 const app = express();
 
-app.use(express());
-app.use(cors()); // Enable Cross-Origin Resource Sharing
-app.use(express.json()); // Parse incoming JSON requests
+// Middleware
+app.use(cors()); // Enable CORS
+app.use(express.json()); // Parse incoming JSON
 app.use(express.urlencoded({ extended: true })); // Parse URL-encoded data
 
+// Routes
 app.use("/", jobsRouter);
 app.use("/", videoRouter);
 
+// Centralized error handling middleware
+app.use((err, req, res, next) => {
+  logger.error("Unhandled error: %o", err);
+  res.status(500).json({ error: "Internal Server Error" });
+});
+
+// Start server
 app.listen(PORT, () => {
-  console.log(`Server listening at http://localhost:${PORT}`.bgYellow);
+  console.log(`Server listening at http://localhost:${PORT}`);
 });
