@@ -20,7 +20,8 @@
     "ffmpeg": "^0.0.4",
     "ffmpeg-static": "^5.2.0",
     "mysql2": "^3.15.3",
-    "sequelize": "^6.37.7"
+    "sequelize": "^6.37.7",
+    "winston": "^3.18.3"
   },
   "devDependencies": {
     "nodemon": "^3.1.10"

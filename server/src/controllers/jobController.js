@@ -2,21 +2,25 @@ import { spawn } from "child_process";
 import path from "path";
 import { fileURLToPath } from "url";
 import { randomUUID } from "crypto";
+import logger from "../utils/logger.js";
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
 
-//For in memory
+// In-memory job store
 const jobStore = new Map();
-
 
 export const startVideoProcess = (req, res) => {
   try {
     const { threshold, targetColor } = req.query;
     const { fileName } = req.params;
     const output = fileName + ".csv";
+
     if (!fileName || !targetColor || !threshold) {
-      return res.status(400).json({ error: "Missing targetColor or threshold query parameter." });
+      logger.warn("Missing required query parameters for file: %s", fileName);
+      return res
+        .status(400)
+        .json({ error: "Missing targetColor or threshold query parameter." });
     }
 
     const jarPath = path.resolve(
@@ -26,12 +30,8 @@ export const startVideoProcess = (req, res) => {
     const inputPath = path.resolve("/videos", fileName);
     const outputPath = path.resolve("/results", output);
 
-
-    //For in memory
-    // Create a new Job ID
+    // Create a new Job ID and store job in memory
     const jobId = randomUUID();
-
-    // Create a job object and store it
     const newJob = {
       id: jobId,
       filename: fileName,
@@ -44,31 +44,34 @@ export const startVideoProcess = (req, res) => {
     };
     jobStore.set(jobId, newJob);
 
-    // --- End of in-memory logic ---
-
     const jarArgs = [inputPath, outputPath, targetColor, threshold];
 
-    console.log("Executing:", ["java", "-jar", jarPath, ...jarArgs]);
+    logger.info(
+      "Starting video process. Job ID: %s | Command: java -jar %s %o",
+      jobId,
+      jarPath,
+      jarArgs
+    );
 
     const child = spawn("java", ["-jar", jarPath, ...jarArgs], {
       detached: true,
       stdio: ["ignore", "pipe", "pipe"],
     });
 
-    let errorOutput = ""; // Store error messages from stderr
+    let errorOutput = "";
+
     child.stdout.on("data", (data) => {
-      console.log(`Job ${jobId} STDOUT: ${data.toString()}`);
+      logger.info("Job %s STDOUT: %s", jobId, data.toString().trim());
     });
 
     child.stderr.on("data", (data) => {
-      const errorMsg = data.toString();
-      console.error(`Job ${jobId} STDERR: ${errorMsg}`);
-      errorOutput += errorMsg; // Collect error messages
+      const errorMsg = data.toString().trim();
+      logger.error("Job %s STDERR: %s", jobId, errorMsg);
+      errorOutput += errorMsg;
     });
 
     child.on("error", (err) => {
-      console.error("Failed to start background job:", err);
-      // Update job in store
+      logger.error("Failed to start background job %s: %o", jobId, err);
       const job = jobStore.get(jobId);
       if (job) {
         job.job_status = "error";
@@ -78,51 +81,49 @@ export const startVideoProcess = (req, res) => {
       }
     });
 
-    // checks for the end of the process, if code is 0 it was successful.
     child.on("exit", (code) => {
-      console.log(`Job ${jobId} exited with code ${code}`);
-
-      // --- Database logic replaced with in-memory map update ---
       const job = jobStore.get(jobId);
       if (job) {
-        job.job_status = code == 0 ? "done" : "error";
+        job.job_status = code === 0 ? "done" : "error";
         job.completed_at = new Date();
-        if (code != 0) {
-          job.error = errorOutput || "Process failed with non-zero exit code.";
+        if (code !== 0) {
+          job.error = errorOutput || `Process failed with exit code ${code}`;
+          logger.error("Job %s failed: %s", jobId, job.error);
+        } else {
+          logger.info("Job %s completed successfully.", jobId);
         }
         jobStore.set(jobId, job);
-        console.log(`Job ${jobId} status updated to ${job.job_status}`);
       } else {
-        console.error(`Job ${jobId} not found in store after exit.`);
+        logger.warn("Job %s not found in store after exit.", jobId);
       }
-      // --- End of in-memory update ---
     });
 
     child.unref();
 
-    res.status(202).json({
-      jobId: jobId,
-    });
-
-    console.log(`Background job started for ${fileName} (ID: ${jobId})`);
+    res.status(202).json({ jobId });
+    logger.info("Background job started for %s (Job ID: %s)", fileName, jobId);
   } catch (error) {
-    console.error("Error starting video process:", error);
+    logger.error("Error starting video process: %o", error);
     res.status(500).json({ error: "Error starting job" });
   }
 };
-
 
 export const getStatus = (req, res) => {
   try {
     const { id } = req.params;
     if (!id) {
+      logger.warn("Job ID not provided in status request");
       return res.status(400).json({ error: "Job ID not provided" });
     }
+
     const job = jobStore.get(id);
     if (!job) {
+      logger.warn("Job ID %s not found in status request", id);
       return res.status(404).json({ error: "Job ID not found" });
     }
-    if (job.job_status == "error") {
+
+    if (job.job_status === "error") {
+      logger.error("Status check for job %s reports error: %s", id, job.error);
       return res.status(200).json({
         status: job.job_status,
         error: job.error || "Error processing video: Unexpected ffmpeg error",
@@ -131,11 +132,10 @@ export const getStatus = (req, res) => {
 
     res.status(200).json({
       status: job.job_status,
-      // Only show the result path if the job is actually done
       result: job.job_status === "done" ? job.output_path : null,
     });
   } catch (error) {
-    console.error("Error fetching job status:", error);
+    logger.error("Error fetching job status: %o", error);
     res.status(500).json({ error: "Error fetching job status" });
   }
 };
