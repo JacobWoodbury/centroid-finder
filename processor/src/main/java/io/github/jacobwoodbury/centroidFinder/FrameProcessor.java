@@ -7,12 +7,13 @@ import org.bytedeco.javacv.Frame;
 import org.bytedeco.javacv.Java2DFrameConverter;
 
 /**
- * Processes individual video frames to find and record the centroid of a target color group.
+ * Processes individual video frames to find and record the centroid of a target
+ * color group.
  */
 public class FrameProcessor {
-    
+
     /**
-     * Processes a single frame, locates the largest group of the target color, 
+     * Processes a single frame, locates the largest group of the target color,
      * and writes the result to the provided writer.
      *
      * @param frame           The video frame to process.
@@ -22,17 +23,22 @@ public class FrameProcessor {
      * @param toBufferedImage Converter for JavaCV frames.
      * @param distanceFinder  Strategy for color comparison.
      */
-    public void process(Frame frame, PrintWriter writer, int targetColor, int threshold, Java2DFrameConverter toBufferedImage, ColorDistanceFinder distanceFinder){
+    public void process(Frame frame, PrintWriter writer, int targetColor, int threshold,
+            Java2DFrameConverter toBufferedImage, ColorDistanceFinder distanceFinder) {
         double timeStamp = (double) (frame.timestamp / 1000000.0);
-        
+
         BufferedImage image = toBufferedImage.convert(frame);
-       
-        ImageBinarizer binarizer = new DistanceImageBinarizer(distanceFinder, targetColor, threshold);
-        ImageGroupFinder groupFinder = new BinarizingImageGroupFinder(binarizer, new DfsBinaryGroupFinder());
-        
+        processImage(image, timeStamp, writer, targetColor, threshold, distanceFinder);
+    }
+
+    public void processImage(BufferedImage image, double timeStamp, PrintWriter writer, int targetColor, int threshold,
+            ColorDistanceFinder distanceFinder) {
+        ImageGroupFinder groupFinder = createGroupFinder(targetColor, threshold, distanceFinder);
+
         List<Group> groups = groupFinder.findConnectedGroups(image);
 
-        // If no groups are found, write -1 -1, otherwise write the centroid of the largest group
+        // If no groups are found, write -1 -1, otherwise write the centroid of the
+        // largest group
         if (groups.isEmpty()) {
             writer.println(String.format("%.2f -1 -1", timeStamp));
         } else {
@@ -40,5 +46,10 @@ public class FrameProcessor {
             writer.println(String.format("%.2f %d %d", timeStamp, largest.centroid().x(), largest.centroid().y()));
         }
         writer.flush();
+    }
+
+    protected ImageGroupFinder createGroupFinder(int targetColor, int threshold, ColorDistanceFinder distanceFinder) {
+        ImageBinarizer binarizer = new DistanceImageBinarizer(distanceFinder, targetColor, threshold);
+        return new BinarizingImageGroupFinder(binarizer, new DfsBinaryGroupFinder());
     }
 }
