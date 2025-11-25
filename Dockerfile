@@ -1,39 +1,62 @@
+# ============================================
+# Stage 1: Build Java JAR with Maven
+# ============================================
+# Use maven to build the jar file but don't keep the build files
+FROM maven:3.9-eclipse-temurin-21 AS builder
 
-# lets our java app run 
+WORKDIR /build
+
+# Copy pom.xml and source code
+COPY processor/pom.xml ./
+COPY processor/src ./src
+
+# Build the JAR with dependencies
+RUN mvn clean package -DskipTests
+
+# ============================================
+# Stage 2: Runtime Environment
+# ============================================
+# Use eclipse-temurin to run the jar file
 FROM eclipse-temurin:21-jre-jammy
 
-# install curl, so that we can add node
+# Install Node.js 18 and build essentials for native modules
 RUN apt-get update && \
-    apt-get install -y curl && \
+    apt-get install -y curl python3 make g++ && \
     rm -rf /var/lib/apt/lists/*
 
-# --- Add Node.js 18 ---
-# This runs the official setup script from NodeSource
-RUN curl -fsSL https://deb.nodesource.com/setup_18.x | bash -
-# Now install Node.js itself
-RUN apt-get install -y nodejs
-# --- End of Node.js setup ---
+# Add Node.js 18
+RUN curl -fsSL https://deb.nodesource.com/setup_18.x | bash - && \
+    apt-get install -y nodejs
 
-
-# Set the working directory inside the container
+# Set working directory
 WORKDIR /app
 
-#set up the server folder
+# Copy JAR from builder stage
+RUN mkdir -p /app/processor/target
+COPY --from=builder /build/target/CentroidFinder-jar-with-dependencies.jar /app/processor/target/
+
+# Set up Node.js server
 RUN mkdir -p /app/server
 WORKDIR /app/server
 
-# Copy package.json and package-lock.json first so that it only re runs npm i if packages change
-COPY server/package*.json /app/server/
+# Copy package files first (faster install if cache is used)
+COPY server/package*.json ./
 
-#make a target folder for the jar (we don't need the rest of processor I believe)
-RUN mkdir -p /app/processor/target
-COPY processor/target/CentroidFinder-jar-with-dependencies.jar /app/processor/target
+# Install dependencies and rebuild native modules for Linux
+RUN npm install --build-from-source
 
-RUN npm install
+# Copy server source code
+COPY server/ ./
 
-#copy the rest of the server
-COPY /server /app/server/
+# Create directories for videos, results, and database (we should get videos and results when running docker image with -v option)
+RUN mkdir -p /videos /results /app/data
 
+# Set environment variables
+ENV PORT=3000 \
+    DB_PATH=/app/data/database.sqlite
+
+# Expose port
 EXPOSE 3000
 
-CMD [ "npm", "run", "dev" ]
+# Start the application
+CMD ["npm", "run", "dev"]
