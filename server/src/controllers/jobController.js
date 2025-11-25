@@ -11,13 +11,12 @@ const jobStore = new Map();
 
 
 export const startVideoProcess = (req, res) => {
-
   try {
-    const { threshold, hexColor } = req.body;
+    const { threshold, targetColor } = req.query;
     const { fileName } = req.params;
     const output = fileName + ".csv";
-    if (!fileName || !hexColor || !threshold) {
-      return res.status(400).json({ message: "Missing required parameters" });
+    if (!fileName || !targetColor || !threshold) {
+      return res.status(400).json({ error: "Missing targetColor or threshold query parameter." });
     }
 
     const jarPath = path.resolve(
@@ -27,7 +26,7 @@ export const startVideoProcess = (req, res) => {
     const inputPath = path.resolve("/videos", fileName);
     const outputPath = path.resolve("/results", output);
 
-    
+
     //For in memory
     // Create a new Job ID
     const jobId = randomUUID();
@@ -47,7 +46,7 @@ export const startVideoProcess = (req, res) => {
 
     // --- End of in-memory logic ---
 
-    const jarArgs = [inputPath, outputPath, hexColor, threshold];
+    const jarArgs = [inputPath, outputPath, targetColor, threshold];
 
     console.log("Executing:", ["java", "-jar", jarPath, ...jarArgs]);
 
@@ -102,14 +101,13 @@ export const startVideoProcess = (req, res) => {
     child.unref();
 
     res.status(202).json({
-      message: "Job accepted and running in background.",
-      id: jobId, 
+      jobId: jobId,
     });
 
     console.log(`Background job started for ${fileName} (ID: ${jobId})`);
   } catch (error) {
     console.error("Error starting video process:", error);
-    res.status(500).json({ message: "Internal server error" });
+    res.status(500).json({ error: "Error starting job" });
   }
 };
 
@@ -118,16 +116,16 @@ export const getStatus = (req, res) => {
   try {
     const { id } = req.params;
     if (!id) {
-      return res.status(404).json({ message: "Job ID not provided" });
+      return res.status(400).json({ error: "Job ID not provided" });
     }
     const job = jobStore.get(id);
     if (!job) {
-      return res.status(404).json({ message: "Job ID not found." });
+      return res.status(404).json({ error: "Job ID not found" });
     }
     if (job.job_status == "error") {
       return res.status(200).json({
         status: job.job_status,
-        error: job.error || "Error processing video: Unexpected error",
+        error: job.error || "Error processing video: Unexpected ffmpeg error",
       });
     }
 
@@ -138,6 +136,6 @@ export const getStatus = (req, res) => {
     });
   } catch (error) {
     console.error("Error fetching job status:", error);
-    res.status(500).send("Error fetching job status");
+    res.status(500).json({ error: "Error fetching job status" });
   }
 };

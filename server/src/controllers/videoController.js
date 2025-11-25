@@ -14,12 +14,12 @@ export const getVideos = (req, res) => {
         const videoUrls = videos.map((file) => `/videos/${file}`);
         return res.json(videoUrls);
       } else {
-        return res.send(err);
+        return res.status(500).json({ error: "Error reading video directory" });
       }
     });
   } catch (error) {
     console.error("Error fetching videos:", error);
-    return res.status(500).json({ message: "Internal Server Error" });
+    return res.status(500).json({ error: "Internal Server Error" });
   }
 };
 
@@ -39,17 +39,17 @@ export const getThumbnail = (req, res) => {
     exec(command, (error) => {
       if (error) {
         console.error(error.message);
-        return res.status(500).send("Error generating thumbnail");
+        return res.status(500).json({ error: "Error generating thumbnail" });
       }
       const absolutePath = path.join(process.cwd(), thumbnailPath);
 
       if (absolutePath) {
         res.status(200).sendFile(absolutePath);
       } else {
-        res.status(500).send("Error generating thumbnail");
+        res.status(500).json({ error: "Error generating thumbnail" });
       }
     });
   } catch (error) {
-    res.status(500).send("error generating thumbnail");
+    res.status(500).json({ error: "Error generating thumbnail" });
   }
 };
