@@ -15,31 +15,36 @@ import { DataTypes } from "sequelize";
 const Jobs = sequelize.define("jobs", {
   id: {
     primaryKey: true,
-    type: DataTypes.INTEGER,
-    autoIncrement: true,
+    type: DataTypes.UUID,
+    defaultValue: DataTypes.UUIDV4,
   },
-  input_video_id: {
-    type: DataTypes.INTEGER,
+  filename: {
+    type: DataTypes.STRING,
+    allowNull: false,
   },
   job_status: {
     type: DataTypes.STRING(30),
     allowNull: false,
-    default: "Pending",
+    defaultValue: "processing",
   },
   progress: {
     type: DataTypes.FLOAT,
-    default: 0,
+    defaultValue: 0,
   },
   output_path: {
     type: DataTypes.STRING,
   },
+  error: {
+    type: DataTypes.TEXT,
+    allowNull: true,
+  },
   started_at: {
     type: DataTypes.DATE,
-    default: new Date(),
+    defaultValue: DataTypes.NOW,
   },
   completed_at: {
     type: DataTypes.DATE,
-    default: null,
+    allowNull: true,
   },
 });
 

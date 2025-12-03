@@ -1,53 +1,44 @@
 import { spawn } from "child_process";
 import path from "path";
 import { fileURLToPath } from "url";
-import { randomUUID } from "crypto";
+import Jobs from "../models/JobsSchema.js";
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
 
-//For in memory
-const jobStore = new Map();
-
-
-export const startVideoProcess = (req, res) => {
-
+export const startVideoProcess = async (req, res) => {
   try {
-    const { threshold, hexColor } = req.body;
-    const { fileName } = req.params;
-    const output = fileName + ".csv";
-    if (!fileName || !hexColor || !threshold) {
-      return res.status(400).json({ message: "Missing required parameters" });
+    const { targetColor, threshold } = req.query;
+    const { filename } = req.params;
+    const output = `/results/${filename}.csv`;
+    
+    if (!filename || !targetColor || !threshold) {
+      return res.status(400).json({ 
+        error: "Missing targetColor or threshold query parameter." 
+      });
     }
 
     const jarPath = path.resolve(
       __dirname,
       "../../../processor/target/CentroidFinder-jar-with-dependencies.jar"
     );
-    const inputPath = path.resolve("/videos", fileName);
-    const outputPath = path.resolve("/results", output);
+    const inputPath = path.resolve("/videos", filename);
+    const outputPath = path.resolve("/results", filename);
 
-    
-    //For in memory
-    // Create a new Job ID
-    const jobId = randomUUID();
-
-    // Create a job object and store it
-    const newJob = {
-      id: jobId,
-      filename: fileName,
+    // Create a new job in the database
+    const newJob = await Jobs.create({
+      filename: filename,
       job_status: "processing",
       progress: 0,
       output_path: output,
       started_at: new Date(),
       completed_at: null,
       error: null,
-    };
-    jobStore.set(jobId, newJob);
+    });
 
-    // --- End of in-memory logic ---
+    const jobId = newJob.id;
 
-    const jarArgs = [inputPath, outputPath, hexColor, threshold];
+    const jarArgs = [inputPath, outputPath, targetColor, threshold];
 
     console.log("Executing:", ["java", "-jar", jarPath, ...jarArgs]);
 
@@ -67,77 +58,84 @@ export const startVideoProcess = (req, res) => {
       errorOutput += errorMsg; // Collect error messages
     });
 
-    child.on("error", (err) => {
+    child.on("error", async (err) => {
       console.error("Failed to start background job:", err);
-      // Update job in store
-      const job = jobStore.get(jobId);
-      if (job) {
-        job.job_status = "error";
-        job.completed_at = new Date();
-        job.error = err.message || "Failed to start process";
-        jobStore.set(jobId, job);
-      }
+      // Update job in database
+      await Jobs.update(
+        {
+          job_status: "error",
+          completed_at: new Date(),
+          error: err.message || "Failed to start process",
+        },
+        { where: { id: jobId } }
+      );
     });
 
     // checks for the end of the process, if code is 0 it was successful.
-    child.on("exit", (code) => {
+    child.on("exit", async (code) => {
       console.log(`Job ${jobId} exited with code ${code}`);
 
-      // --- Database logic replaced with in-memory map update ---
-      const job = jobStore.get(jobId);
-      if (job) {
-        job.job_status = code == 0 ? "done" : "error";
-        job.completed_at = new Date();
-        if (code != 0) {
-          job.error = errorOutput || "Process failed with non-zero exit code.";
-        }
-        jobStore.set(jobId, job);
-        console.log(`Job ${jobId} status updated to ${job.job_status}`);
-      } else {
-        console.error(`Job ${jobId} not found in store after exit.`);
+      // Update job in database
+      const updateData = {
+        job_status: code === 0 ? "done" : "error",
+        completed_at: new Date(),
+      };
+
+      if (code !== 0) {
+        updateData.error = errorOutput || "Process failed with non-zero exit code.";
       }
-      // --- End of in-memory update ---
+
+      await Jobs.update(updateData, { where: { id: jobId } });
+      console.log(`Job ${jobId} status updated to ${updateData.job_status}`);
     });
 
     child.unref();
 
     res.status(202).json({
-      message: "Job accepted and running in background.",
-      id: jobId, 
+      jobId: jobId,
     });
 
-    console.log(`Background job started for ${fileName} (ID: ${jobId})`);
+    console.log(`Background job started for ${filename} (ID: ${jobId})`);
   } catch (error) {
     console.error("Error starting video process:", error);
-    res.status(500).json({ message: "Internal server error" });
+    res.status(500).json({ error: "Error starting job" });
   }
 };
 
 
-export const getStatus = (req, res) => {
+export const getStatus = async (req, res) => {
   try {
-    const { id } = req.params;
-    if (!id) {
-      return res.status(404).json({ message: "Job ID not provided" });
+    const { jobId } = req.params;
+    
+    if (!jobId) {
+      return res.status(404).json({ error: "Job ID not found" });
     }
-    const job = jobStore.get(id);
+    
+    const job = await Jobs.findByPk(jobId);
+    
     if (!job) {
-      return res.status(404).json({ message: "Job ID not found." });
+      return res.status(404).json({ error: "Job ID not found" });
     }
-    if (job.job_status == "error") {
+    
+    if (job.job_status === "error") {
       return res.status(200).json({
         status: job.job_status,
         error: job.error || "Error processing video: Unexpected error",
       });
     }
 
-    res.status(200).json({
+    const response = {
       status: job.job_status,
-      // Only show the result path if the job is actually done
-      result: job.job_status === "done" ? job.output_path : null,
-    });
+    };
+
+    // Only include result if job is done
+    if (job.job_status === "done") {
+      response.result = job.output_path;
+    }
+
+    res.status(200).json(response);
   } catch (error) {
     console.error("Error fetching job status:", error);
-    res.status(500).send("Error fetching job status");
+    res.status(500).json({ error: "Error fetching job status" });
   }
 };

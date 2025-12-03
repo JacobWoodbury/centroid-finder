@@ -3,6 +3,8 @@ import dotenv from "dotenv";
 import cors from "cors";
 import jobsRouter from "./routes/jobsRoutes.js";
 import videoRouter from "./routes/videosRoutes.js";
+import sequelize from "./db/connection.js";
+import Jobs from "./models/JobsSchema.js";
 
 /**
  * Main entry point for the Express server.
@@ -23,6 +25,20 @@ app.use(express.urlencoded({ extended: true })); // Parse URL-encoded data
 app.use("/", jobsRouter);
 app.use("/", videoRouter);
 
-app.listen(PORT, () => {
-  console.log(`Server listening at http://localhost:${PORT}`.bgYellow);
-});
+// Initialize database and start server
+async function startServer() {
+  try {
+    // Sync database tables (create if they don't exist)
+    await sequelize.sync({ alter: true });
+    console.log("Database tables synchronized".bgGreen);
+
+    app.listen(PORT, () => {
+      console.log(`Server listening at http://localhost:${PORT}`.bgYellow);
+    });
+  } catch (error) {
+    console.error("Failed to start server:".bgRed, error);
+    process.exit(1);
+  }
+}
+
+startServer();
