@@ -9,7 +9,12 @@ const videoDir = "/videos";
 export const getVideos = (req, res) => {
   try {
     fs.readdir(videoDir, (err, files) => {
-      if (err) {
+      if (!err) {
+        const videos = files.filter((file) => file.endsWith(".mp4"));
+
+        const videoUrls = videos.map((file) => `/videos/${file}`);
+        return res.json(videos);
+      } else {
         logger.error("Error reading video directory: %o", err);
         return res.status(500).json({ error: "Error reading video directory" });
       }

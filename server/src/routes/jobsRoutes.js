@@ -3,8 +3,8 @@ import { getStatus, startVideoProcess } from "../controllers/jobController.js";
 
 const jobRouter = Router();
 
-jobRouter.post("/process/:fileName", startVideoProcess);
+jobRouter.post("/process/:filename", startVideoProcess);
 
-jobRouter.get("/process/:id/status", getStatus);
+jobRouter.get("/process/:jobId/status", getStatus);
 
 export default jobRouter;

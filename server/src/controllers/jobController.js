@@ -1,6 +1,7 @@
 import { spawn } from "child_process";
 import path from "path";
 import { fileURLToPath } from "url";
+import Jobs from "../models/JobsSchema.js";
 import { randomUUID } from "crypto";
 import logger from "../utils/logger.js";
 
@@ -14,7 +15,7 @@ export const startVideoProcess = (req, res) => {
   try {
     const { threshold, targetColor } = req.query;
     const { fileName } = req.params;
-    const output = fileName + ".csv";
+    const output = `/results/${filename}.csv`;
 
     if (!fileName || !targetColor || !threshold) {
       logger.warn("Missing required query parameters for file: %s", fileName);
@@ -27,8 +28,8 @@ export const startVideoProcess = (req, res) => {
       __dirname,
       "../../../processor/target/CentroidFinder-jar-with-dependencies.jar"
     );
-    const inputPath = path.resolve("/videos", fileName);
-    const outputPath = path.resolve("/results", output);
+    const inputPath = path.resolve("/videos", filename);
+    const outputPath = path.resolve("/results", filename);
 
     // Create a new Job ID and store job in memory
     const jobId = randomUUID();
@@ -41,8 +42,7 @@ export const startVideoProcess = (req, res) => {
       started_at: new Date(),
       completed_at: null,
       error: null,
-    };
-    jobStore.set(jobId, newJob);
+    });
 
     const jarArgs = [inputPath, outputPath, targetColor, threshold];
 
@@ -70,72 +70,105 @@ export const startVideoProcess = (req, res) => {
       errorOutput += errorMsg;
     });
 
-    child.on("error", (err) => {
-      logger.error("Failed to start background job %s: %o", jobId, err);
-      const job = jobStore.get(jobId);
-      if (job) {
-        job.job_status = "error";
-        job.completed_at = new Date();
-        job.error = err.message || "Failed to start process";
-        jobStore.set(jobId, job);
-      }
-    });
 
-    child.on("exit", (code) => {
-      const job = jobStore.get(jobId);
-      if (job) {
-        job.job_status = code === 0 ? "done" : "error";
-        job.completed_at = new Date();
-        if (code !== 0) {
-          job.error = errorOutput || `Process failed with exit code ${code}`;
-          logger.error("Job %s failed: %s", jobId, job.error);
-        } else {
-          logger.info("Job %s completed successfully.", jobId);
-        }
-        jobStore.set(jobId, job);
-      } else {
-        logger.warn("Job %s not found in store after exit.", jobId);
-      }
-    });
+
+child.on("error", async (err) => {
+  logger.error("Failed to start background job %s: %o", jobId, err);
+  
+  await Jobs.update(
+    {
+      job_status: "error",
+      completed_at: new Date(),
+      error: err.message || "Failed to start process",
+    },
+    { where: { id: jobId } }
+  );
+  
+});
+
+// checks for the end of the process, if code is 0 it was successful.
+child.on("exit", async (code) => {
+  // Log the exit code
+  logger.info(`Job ${jobId} exited with code ${code}`); // Using logger from 'main'
+
+  // Prepare update data for the database
+  const updateData = {
+    job_status: code === 0 ? "done" : "error",
+    completed_at: new Date(),
+  };
+
+  if (code !== 0) {
+    // Add error message if the exit code is not 0
+    updateData.error = errorOutput || `Process failed with exit code ${code}`;
+    logger.error("Job %s failed: %s", jobId, updateData.error); // Log error for failed jobs
+  } else {
+    logger.info("Job %s completed successfully.", jobId); // Log success
+  }
+
+  // Update job in database
+  await Jobs.update(updateData, { where: { id: jobId } });
+  logger.info(`Job ${jobId} status updated to ${updateData.job_status}`);
+  
+
+});
 
     child.unref();
 
-    res.status(202).json({ jobId });
-    logger.info("Background job started for %s (Job ID: %s)", fileName, jobId);
+    res.status(202).json({
+      jobId: jobId,
+    });
+
+    console.log(`Background job started for ${filename} (ID: ${jobId})`);
   } catch (error) {
-    logger.error("Error starting video process: %o", error);
+    console.error("Error starting video process:", error);
     res.status(500).json({ error: "Error starting job" });
   }
 };
 
-export const getStatus = (req, res) => {
+export const getStatus = async (req, res) => {
   try {
-    const { id } = req.params;
-    if (!id) {
-      logger.warn("Job ID not provided in status request");
+    const { jobId } = req.params; // Use jobId for consistency
+
+    if (!jobId) {
+      // Use logger and correct 400 status code from 'main'
+      logger.warn("Job ID not provided in status request"); 
       return res.status(400).json({ error: "Job ID not provided" });
     }
 
-    const job = jobStore.get(id);
+    // Use asynchronous database lookup from 'processor-testing'
+    const job = await Jobs.findByPk(jobId);
+
     if (!job) {
-      logger.warn("Job ID %s not found in status request", id);
+      // Use logger from 'main'
+      logger.warn("Job ID %s not found in status request", jobId); 
       return res.status(404).json({ error: "Job ID not found" });
     }
 
     if (job.job_status === "error") {
-      logger.error("Status check for job %s reports error: %s", id, job.error);
+      // Use logger from 'main' to log the error
+      logger.error("Status check for job %s reports error: %s", jobId, job.error); 
+    }
+    
+    // Add logic to return the job status (this was missing from the conflict snippet)
+    return res.status(200).json(job);
+
+  } catch (error) {
+    logger.error("Error retrieving job status for %s: %o", req.params.jobId || 'unknown', error);
+    return res.status(500).json({ error: "Internal server error" });
+  }
+};
       return res.status(200).json({
         status: job.job_status,
         error: job.error || "Error processing video: Unexpected ffmpeg error",
       });
     }
 
-    res.status(200).json({
+    const response = {
       status: job.job_status,
       result: job.job_status === "done" ? job.output_path : null,
     });
   } catch (error) {
-    logger.error("Error fetching job status: %o", error);
+    
     res.status(500).json({ error: "Error fetching job status" });
   }
 };
