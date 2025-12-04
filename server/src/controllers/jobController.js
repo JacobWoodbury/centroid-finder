@@ -2,6 +2,7 @@ import { spawn } from "child_process";
 import path from "path";
 import { fileURLToPath } from "url";
 import logger from "../utils/logger.js";
+import fs from "fs";
 import db from "../models/index.js";
 
 const { Jobs, Videos } = db;
@@ -83,7 +84,11 @@ export const startVideoProcess = async (req, res) => {
           completed_at: new Date(),
         });
       } catch (dbErr) {
-        logger.error("Failed to update job status to error for job %s: %o", jobId, dbErr);
+        logger.error(
+          "Failed to update job status to error for job %s: %o",
+          jobId,
+          dbErr
+        );
       }
     });
 
@@ -96,12 +101,21 @@ export const startVideoProcess = async (req, res) => {
         });
 
         if (code !== 0) {
-          logger.error("Job %s failed with exit code %s. Stderr: %s", jobId, code, errorOutput);
+          logger.error(
+            "Job %s failed with exit code %s. Stderr: %s",
+            jobId,
+            code,
+            errorOutput
+          );
         } else {
           logger.info("Job %s completed successfully.", jobId);
         }
       } catch (dbErr) {
-        logger.error("Failed to update job status on exit for job %s: %o", jobId, dbErr);
+        logger.error(
+          "Failed to update job status on exit for job %s: %o",
+          jobId,
+          dbErr
+        );
       }
     });
 
@@ -144,5 +158,44 @@ export const getStatus = async (req, res) => {
   } catch (error) {
     logger.error("Error fetching job status: %o", error);
     res.status(500).json({ error: "Error fetching job status" });
+  }
+};
+
+export const getCsv = async (req, res) => {
+  const { jobId } = req.params;
+
+  try {
+    const job = await Jobs.findByPk(jobId);
+    if (!job) {
+      return res.status(404).json({ error: "Job not found" });
+    }
+
+    if (job.job_status !== "done") {
+      return res.status(400).json({ error: "Job not completed yet" });
+    }
+
+    const filePath = path.resolve("/results", job.output_path);
+
+    // Prevent directory traversal
+    if (!filePath.startsWith("/results")) {
+      return res.status(400).json({ error: "Invalid file path" });
+    }
+
+    fs.access(filePath, fs.constants.R_OK, (err) => {
+      if (err) {
+        logger.error("File not accessible: %s", filePath);
+        return res.status(404).json({ error: "File not found" });
+      }
+
+      res.sendFile(filePath, (err) => {
+        if (err) {
+          logger.error("Error sending file: %s", err);
+          res.status(500).send("Error sending file");
+        }
+      });
+    });
+  } catch (error) {
+    logger.error("Error fetching result file for job %s: %o", jobId, error);
+    res.status(500).json({ error: "Error fetching result file" });
   }
 };
