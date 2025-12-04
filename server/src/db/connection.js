@@ -7,23 +7,21 @@ dotenv.config();
 /**
  * Database Connection Configuration.
  *
- * Establishes a connection to the MySQL database using Sequelize.
- * Credentials are read from environment variables.
+ * Establishes a connection to SQLite database using Sequelize.
  */
-const { DB_HOST, DB_PORT, DB_USERNAME, DB_PASSWORD, DB_DATABASE, DB_DIALECT } =
-  process.env;
+const { DB_PATH } = process.env;
+
 console.log(process.env);
 
-const sequelize = new Sequelize(DB_DATABASE, DB_USERNAME, DB_PASSWORD, {
-  host: DB_HOST,
-  dialect: DB_DIALECT,
-  port: DB_PORT,
+const sequelize = new Sequelize({
+  dialect: 'sqlite',
+  storage: DB_PATH || '/app/data/database.sqlite',
   logging: (q) => console.log(`Sequelize Query: ${q}`),
 });
 
 try {
   await sequelize.authenticate();
-  console.log("Connected to MySQL DB".bgGreen);
+  console.log("Connected to SQLite DB".bgGreen);
 } catch (error) {
   console.log("Can not connect to db. Error: ".bgRed, error);
 }

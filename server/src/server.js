@@ -4,6 +4,7 @@ import cors from "cors";
 import jobsRouter from "./routes/jobsRoutes.js";
 import videoRouter from "./routes/videosRoutes.js";
 import logger from "./utils/logger.js"; // Import Winston logger
+import db from "./models/index.js";
 
 dotenv.config();
 
@@ -26,6 +27,17 @@ app.use((err, req, res, next) => {
 });
 
 // Start server
-app.listen(PORT, () => {
-  console.log(`Server listening at http://localhost:${PORT}`);
-});
+const startServer = async () => {
+  try {
+    await db.sequelize.sync();
+    logger.info("Database synced successfully.");
+    app.listen(PORT, () => {
+      console.log(`Server listening at http://localhost:${PORT}`);
+    });
+  } catch (error) {
+    logger.error("Failed to sync database: %o", error);
+    process.exit(1);
+  }
+};
+
+startServer();

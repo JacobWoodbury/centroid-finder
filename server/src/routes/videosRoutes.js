@@ -3,7 +3,7 @@ import { getVideos, getThumbnail } from "../controllers/videoController.js";
 
 const videoRouter = Router();
 
-videoRouter.get("/thumbnail/:fileName", getThumbnail);
+videoRouter.get("/thumbnail/:filename", getThumbnail);
 
 videoRouter.get("/api/videos", getVideos);
 

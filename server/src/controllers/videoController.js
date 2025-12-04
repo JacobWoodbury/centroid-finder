@@ -3,21 +3,35 @@ import path from "path";
 import fs from "fs";
 import ffmpegPath from "ffmpeg-static";
 import logger from "../utils/logger.js";
+import db from "../models/index.js";
 
+const { Videos } = db;
 const videoDir = "/videos";
 
 export const getVideos = (req, res) => {
   try {
-    fs.readdir(videoDir, (err, files) => {
+    fs.readdir(videoDir, async (err, files) => {
       if (err) {
         logger.error("Error reading video directory: %o", err);
         return res.status(500).json({ error: "Error reading video directory" });
       }
 
-      const videos = files.filter((file) => file.endsWith(".mp4"));
-      const videoUrls = videos.map((file) => `/videos/${file}`);
-      logger.info("Fetched %d videos from directory", videos.length);
-      return res.json(videoUrls);
+      const videoFiles = files.filter((file) => file.endsWith(".mp4"));
+
+      // Sync with database
+      for (const file of videoFiles) {
+        await Videos.findOrCreate({
+          where: { filename: file },
+          defaults: {
+            filepath: `/videos/${file}`,
+            uploaded_at: new Date(),
+          },
+        });
+      }
+
+      // Return just filenames, not full URLs
+      logger.info("Fetched %d videos from directory and synced with DB", videoFiles.length);
+      return res.json(videoFiles);
     });
   } catch (error) {
     logger.error("Unexpected error fetching videos: %o", error);
@@ -27,13 +41,13 @@ export const getVideos = (req, res) => {
 
 export const getThumbnail = (req, res) => {
   try {
-    const { fileName } = req.params;
-    if (!fileName) {
-      logger.warn("Thumbnail request missing fileName parameter");
+    const { filename } = req.params;
+    if (!filename) {
+      logger.warn("Thumbnail request missing filename parameter");
       return res.status(400).json({ error: "File name not provided" });
     }
 
-    const videoPath = path.join(videoDir, fileName);
+    const videoPath = path.join(videoDir, filename);
     const thumbnailDir = path.join("public", "thumbnails");
 
     if (!fs.existsSync(thumbnailDir)) {
@@ -41,7 +55,7 @@ export const getThumbnail = (req, res) => {
       logger.info("Created thumbnail directory at %s", thumbnailDir);
     }
 
-    const thumbnailPath = path.join(thumbnailDir, fileName + ".jpeg");
+    const thumbnailPath = path.join(thumbnailDir, filename + ".jpeg");
 
     const command = `"${ffmpegPath}" -i "${videoPath}" -ss 00:00:01 -vframes 1 -vf "scale=320:-1" -update 1 "${thumbnailPath}" -y`;
 
@@ -49,21 +63,21 @@ export const getThumbnail = (req, res) => {
       if (error) {
         logger.error(
           "FFmpeg error generating thumbnail for %s: %o",
-          fileName,
+          filename,
           error
         );
         return res.status(500).json({ error: "Error generating thumbnail" });
       }
 
       const absolutePath = path.join(process.cwd(), thumbnailPath);
-      logger.info("Thumbnail generated for %s at %s", fileName, absolutePath);
+      logger.info("Thumbnail generated for %s at %s", filename, absolutePath);
 
       if (fs.existsSync(absolutePath)) {
         res.status(200).sendFile(absolutePath);
       } else {
         logger.error(
           "Thumbnail file not found after generation for %s",
-          fileName
+          filename
         );
         res.status(500).json({ error: "Error generating thumbnail" });
       }
@@ -71,7 +85,7 @@ export const getThumbnail = (req, res) => {
   } catch (error) {
     logger.error(
       "Unexpected error generating thumbnail for %s: %o",
-      req.params.fileName,
+      req.params.filename,
       error
     );
     res.status(500).json({ error: "Error generating thumbnail" });
